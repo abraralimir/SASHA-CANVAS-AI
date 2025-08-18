@@ -51,7 +51,7 @@ export default function SashaChat({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim() || isProcessing) return;
-    onSubmit(prompt, selectedStyle);
+    onSubmit(prompt, selectedStyle === 'default' ? '' : selectedStyle);
     setPrompt('');
   };
   
@@ -118,12 +118,12 @@ export default function SashaChat({
         <div className="border-t p-4 space-y-4">
            <div className="flex items-center gap-2">
               <Palette className="h-5 w-5 text-muted-foreground" />
-              <Select onValueChange={setSelectedStyle} defaultValue="">
+              <Select onValueChange={setSelectedStyle} defaultValue="default">
                   <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose a style (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                      <SelectItem value="">Default</SelectItem>
+                      <SelectItem value="default">Default</SelectItem>
                       {drawingStyles.map(style => (
                           <SelectItem key={style} value={style.toLowerCase()}>{style}</SelectItem>
                       ))}
