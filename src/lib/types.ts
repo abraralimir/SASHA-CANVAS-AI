@@ -7,7 +7,6 @@ export type DrawingTool =
   | 'eraser'
   | 'ai-eraser'
   | 'download'
-  | 'ai-complete'
   | 'pipette';
 
 export interface Point {

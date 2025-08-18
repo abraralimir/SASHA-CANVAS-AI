@@ -32,70 +32,62 @@ export function useDrawing({
 
   const getCanvasContext = useCallback(
     (canvas: HTMLCanvasElement | null) => {
-      return canvas?.getContext('2d');
+      return canvas?.getContext('2d', { willReadFrequently: true });
     },
     []
   );
 
-  useEffect(() => {
+  const setCanvasBackground = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = getCanvasContext(canvas);
     if (!ctx) return;
-    
-    // Set the background color, user can clear explicitly.
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     onDrawEnd();
   }, [canvasColor, canvasRef, getCanvasContext, onDrawEnd]);
 
-
   const resizeCanvases = useCallback(() => {
     const canvas = canvasRef.current;
     const selectionCanvas = selectionCanvasRef.current;
-    if (!canvas || !selectionCanvas) return;
+    if (!canvas || !selectionCanvas || !canvas.parentElement) return;
 
     const mainCtx = getCanvasContext(canvas);
     if (!mainCtx) return;
     
-    // Save drawing from main canvas
     const drawing = mainCtx.getImageData(0, 0, canvas.width, canvas.height);
     
-    const { width, height } = canvas.getBoundingClientRect();
+    const { width, height } = canvas.parentElement.getBoundingClientRect();
     
-    // Resize both canvases
     canvas.width = width;
     canvas.height = height;
     selectionCanvas.width = width;
     selectionCanvas.height = height;
 
-    // Restore drawing to main canvas
     mainCtx.putImageData(drawing, 0, 0);
 
   }, [canvasRef, selectionCanvasRef, getCanvasContext]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const selectionCanvas = selectionCanvasRef.current;
-    if (!canvas || !selectionCanvas) return;
-
-    // Initial sizing
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    selectionCanvas.width = canvas.offsetWidth;
-    selectionCanvas.height = canvas.offsetHeight;
+    if (!canvas || !canvas.parentElement) return;
     
-    const ctx = getCanvasContext(canvas);
-    if (!ctx) return;
-    ctx.fillStyle = canvasColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    onDrawEnd();
+    const { width, height } = canvas.parentElement.getBoundingClientRect();
+    canvas.width = width;
+    canvas.height = height;
+
+    setCanvasBackground();
 
     window.addEventListener('resize', resizeCanvases);
     return () => {
         window.removeEventListener('resize', resizeCanvases);
     };
-  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvases, onDrawEnd]);
+  }, [setCanvasBackground, resizeCanvases, canvasRef]);
+  
+  useEffect(() => {
+    setCanvasBackground();
+  }, [canvasColor, setCanvasBackground]);
+
 
   const getPoint = (e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
@@ -179,6 +171,9 @@ export function useDrawing({
 
     if (tool === 'brush' || tool === 'eraser' || tool === 'ai-eraser') {
       ctx.moveTo(point.x, point.y);
+      // Draw a single dot on mousedown
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
     }
   }, [tool, strokeWidth, strokeColor, canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, onColorPick]);
 
@@ -203,8 +198,8 @@ export function useDrawing({
       case 'brush':
       case 'eraser':
       case 'ai-eraser':
-        ctx.lineTo(currentPoint.x, currentPoint.y);
-        ctx.stroke();
+        currentToolCtx.lineTo(currentPoint.x, currentPoint.y);
+        currentToolCtx.stroke();
         break;
       case 'line':
         drawLine(currentToolCtx, startPoint.current, currentPoint);

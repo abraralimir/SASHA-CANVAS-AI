@@ -9,12 +9,11 @@ import {
   Eraser,
   Sparkles,
   Pipette,
-  Palette,
   Upload,
   Download,
   Trash2,
   Loader,
-  ChevronDown,
+  Square,
 } from 'lucide-react';
 import type { DrawingTool } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,7 @@ import {
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { useRef } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ToolbarProps {
   tool: DrawingTool;
@@ -45,21 +45,26 @@ interface ToolbarProps {
   setCanvasColor: (color: string) => void;
   onClear: () => void;
   onDownload: () => void;
-  onAiComplete: () => void;
   onImageUpload: (file: File) => void;
   isProcessing: boolean;
+  isDrawing: boolean;
+  onStopDrawing: () => void;
 }
 
-const tools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
+const mainTools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
   { name: 'brush', icon: Brush, label: 'Brush' },
-  { name: 'line', icon: Minus, label: 'Line' },
-  { name: 'rectangle', icon: RectangleHorizontal, label: 'Rectangle' },
-  { name: 'circle', icon: Circle, label: 'Circle' },
-  { name: 'triangle', icon: Triangle, label: 'Triangle' },
   { name: 'eraser', icon: Eraser, label: 'Eraser' },
   { name: 'pipette', icon: Pipette, label: 'Color Picker' },
   { name: 'ai-eraser', icon: Sparkles, label: 'AI Eraser' },
 ];
+
+const shapeTools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
+    { name: 'line', icon: Minus, label: 'Line' },
+    { name: 'rectangle', icon: RectangleHorizontal, label: 'Rectangle' },
+    { name: 'circle', icon: Circle, label: 'Circle' },
+    { name: 'triangle', icon: Triangle, label: 'Triangle' },
+];
+
 
 const colorPalettes = {
   Vibrant: ['#FF4848', '#FF822F', '#FFD44F', '#46E47A', '#38BDF8', '#A020F0', '#E253B8'],
@@ -78,9 +83,10 @@ export default function Toolbar({
   setCanvasColor,
   onClear,
   onDownload,
-  onAiComplete,
   onImageUpload,
   isProcessing,
+  isDrawing,
+  onStopDrawing
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -97,9 +103,11 @@ export default function Toolbar({
   return (
     <TooltipProvider delayDuration={100}>
       <header className="relative z-10 w-full shrink-0 border-b bg-card/80 backdrop-blur-lg">
-        <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-          <div className="flex items-center gap-2">
-            {tools.map((t) => (
+        <div className="container mx-auto flex h-16 flex-wrap items-center justify-center md:justify-between gap-2 px-4">
+          
+          {/* Main Tools */}
+          <div className="flex items-center gap-1">
+            {mainTools.map((t) => (
               <Tooltip key={t.name}>
                 <TooltipTrigger asChild>
                   <Button
@@ -116,12 +124,45 @@ export default function Toolbar({
                 </TooltipContent>
               </Tooltip>
             ))}
+             <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={shapeTools.some(t => t.name === tool) ? 'primary' : 'ghost'} size="icon"
+                 style={shapeTools.some(t => t.name === tool) ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
+                >
+                    <Square className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-1">
+                 <div className="flex items-center gap-1">
+                    {shapeTools.map((t) => (
+                      <Tooltip key={t.name}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={tool === t.name ? 'primary' : 'ghost'}
+                            size="icon"
+                            onClick={() => setTool(t.name)}
+                            style={tool === t.name ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
+                          >
+                            <t.icon className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t.label}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                 </div>
+              </PopoverContent>
+            </Popover>
           </div>
+          
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
 
-          <div className="flex items-center gap-4">
+          {/* Stroke & Canvas Controls */}
+          <div className="flex items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-40 justify-between">
+                <Button variant="outline" className="w-32 md:w-40 justify-between">
                   <span>Stroke</span>
                   <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: strokeColor }} />
                 </Button>
@@ -148,7 +189,7 @@ export default function Toolbar({
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-40 justify-between">
+                <Button variant="outline" className="w-32 md:w-40 justify-between">
                   <span>Canvas</span>
                   <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: canvasColor }} />
                 </Button>
@@ -183,9 +224,10 @@ export default function Toolbar({
 
           </div>
           
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
           
-          <div className="flex items-center gap-2">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={handleUploadClick}><Upload className="h-5 w-5" /></Button></TooltipTrigger>
@@ -199,10 +241,18 @@ export default function Toolbar({
               <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onClear}><Trash2 className="h-5 w-5" /></Button></TooltipTrigger>
               <TooltipContent><p>Clear Canvas</p></TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="primary" onClick={onAiComplete} disabled={isProcessing} className="gap-2" style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}>{isProcessing && tool==='ai-complete' ? <Loader className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}<span>Complete</span></Button></TooltipTrigger>
-              <TooltipContent><p>Complete with AI</p></TooltipContent>
-            </Tooltip>
+             {isDrawing && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="destructive" size="icon" onClick={onStopDrawing}>
+                    <Square className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Stop Drawing</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
       </header>
