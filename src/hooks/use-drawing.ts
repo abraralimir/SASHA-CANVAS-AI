@@ -41,57 +41,57 @@ export function useDrawing({
     const ctx = getCanvasContext(canvas);
     if (!ctx) return;
     
-    // This seems to be causing a flicker, let's just set the bg color
-    // and let the user clear it explicitly.
-    // ctx.fillStyle = canvasColor;
-    // ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Set the background color, user can clear explicitly.
+    ctx.fillStyle = canvasColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [canvasColor, canvasRef, getCanvasContext]);
 
 
-  const resizeCanvas = useCallback(() => {
+  const resizeCanvases = useCallback(() => {
     const canvas = canvasRef.current;
-     if (!canvas) return;
-    const ctx = getCanvasContext(canvas);
-    if (!ctx) return;
+    const selectionCanvas = selectionCanvasRef.current;
+    if (!canvas || !selectionCanvas) return;
+
+    const mainCtx = getCanvasContext(canvas);
+    if (!mainCtx) return;
+    
+    // Save drawing from main canvas
+    const drawing = mainCtx.getImageData(0, 0, canvas.width, canvas.height);
     
     const { width, height } = canvas.getBoundingClientRect();
-    // Save drawing
-    const drawing = ctx.getImageData(0, 0, canvas.width, canvas.height);
     
+    // Resize both canvases
     canvas.width = width;
     canvas.height = height;
+    selectionCanvas.width = width;
+    selectionCanvas.height = height;
 
-    // Restore drawing
-    ctx.putImageData(drawing, 0, 0);
+    // Restore drawing to main canvas
+    mainCtx.putImageData(drawing, 0, 0);
 
-    const selectionCanvas = selectionCanvasRef.current;
-    if(selectionCanvas) {
-        selectionCanvas.width = width;
-        selectionCanvas.height = height;
-    }
   }, [canvasRef, selectionCanvasRef, getCanvasContext]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const selectionCanvas = selectionCanvasRef.current;
+    if (!canvas || !selectionCanvas) return;
+
+    // Initial sizing
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
+    selectionCanvas.width = canvas.offsetWidth;
+    selectionCanvas.height = canvas.offsetHeight;
+    
     const ctx = getCanvasContext(canvas);
     if (!ctx) return;
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const selectionCanvas = selectionCanvasRef.current;
-    if(selectionCanvas) {
-        selectionCanvas.width = selectionCanvas.offsetWidth;
-        selectionCanvas.height = selectionCanvas.offsetHeight;
-    }
-
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', resizeCanvases);
     return () => {
-        window.removeEventListener('resize', resizeCanvas);
+        window.removeEventListener('resize', resizeCanvases);
     };
-  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvas]);
+  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvases]);
 
   const getPoint = (e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
@@ -101,13 +101,6 @@ export function useDrawing({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     };
-  };
-
-  const drawPen = (ctx: CanvasRenderingContext2D, start: Point, end: Point) => {
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(end.x, end.y);
-    ctx.stroke();
   };
 
   const drawLine = (ctx: CanvasRenderingContext2D, start: Point, end: Point) => {
@@ -157,9 +150,10 @@ export function useDrawing({
 
     setIsDrawing(true);
     startPoint.current = point;
-
-    if (tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser') {
-      snapshot.current = getCanvasContext(canvasRef.current)?.getImageData(0, 0, canvas.width, canvas.height) ?? null;
+    
+    const mainCanvas = canvasRef.current;
+    if (tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser' && mainCanvas) {
+      snapshot.current = getCanvasContext(mainCanvas)?.getImageData(0, 0, mainCanvas.width, mainCanvas.height) ?? null;
     }
 
     ctx.beginPath();
@@ -198,6 +192,9 @@ export function useDrawing({
       getCanvasContext(mainCanvas)?.putImageData(snapshot.current, 0, 0);
     }
     
+    const currentToolCtx = (tool === 'brush' || tool === 'eraser' || tool === 'ai-eraser') ? ctx : getCanvasContext(mainCanvas);
+    if (!currentToolCtx) return;
+
     switch (tool) {
       case 'brush':
       case 'eraser':
@@ -206,16 +203,16 @@ export function useDrawing({
         ctx.stroke();
         break;
       case 'line':
-        drawLine(ctx, startPoint.current, currentPoint);
+        drawLine(currentToolCtx, startPoint.current, currentPoint);
         break;
       case 'rectangle':
-        drawRectangle(ctx, startPoint.current, currentPoint);
+        drawRectangle(currentToolCtx, startPoint.current, currentPoint);
         break;
       case 'circle':
-        drawCircle(ctx, startPoint.current, currentPoint);
+        drawCircle(currentToolCtx, startPoint.current, currentPoint);
         break;
       case 'triangle':
-        drawTriangle(ctx, startPoint.current, currentPoint);
+        drawTriangle(currentToolCtx, startPoint.current, currentPoint);
         break;
     }
   }, [isDrawing, tool, canvasRef, selectionCanvasRef, getCanvasContext]);

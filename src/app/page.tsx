@@ -193,7 +193,7 @@ export default function Home() {
     }
   }, [getCanvasData, toast]);
   
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
@@ -202,44 +202,32 @@ export default function Home() {
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        // Scale image to fit canvas
-        const hRatio = canvas.width / img.width;
-        const vRatio = canvas.height / img.height;
-        const ratio = Math.min(hRatio, vRatio);
-        const centerShift_x = (canvas.width - img.width * ratio) / 2;
-        const centerShift_y = (canvas.height - img.height * ratio) / 2;
-        ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       };
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
-  };
+  }, []);
   
-  const addImageToCanvas = (dataUri: string) => {
+  const addImageToCanvas = useCallback((dataUri: string) => {
     const img = new Image();
     img.onload = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      // Scale image to fit canvas
-      const hRatio = canvas.width / img.width;
-      const vRatio = canvas.height / img.height;
-      const ratio = Math.min(hRatio, vRatio);
-      const centerShift_x = (canvas.width - img.width * ratio) / 2;
-      const centerShift_y = (canvas.height - img.height * ratio) / 2;
-      ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
     img.src = dataUri;
     if (isMobile) {
       setIsChatOpen(false);
     }
     toast({ title: "Image Added", description: "The AI-generated image has been added to your canvas." });
-  };
+  }, [isMobile, toast]);
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const drawStep = (ctx: CanvasRenderingContext2D, step: DrawingStep) => {
+  const drawStep = useCallback((ctx: CanvasRenderingContext2D, step: DrawingStep) => {
     ctx.beginPath();
     ctx.strokeStyle = step.color;
     ctx.fillStyle = step.color;
@@ -255,19 +243,21 @@ export default function Home() {
         }
       }
     } else if (step.tool === 'rectangle') {
+      if (step.points.length < 2) return;
       const start = step.points[0];
       const end = step.points[1];
       ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
     } else if (step.tool === 'circle') {
+      if (step.points.length < 2) return;
       const start = step.points[0];
       const end = step.points[1];
       const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
       ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
     }
     ctx.stroke();
-  };
+  }, []);
   
-  const handleChatSubmit = async (prompt: string, style?: string) => {
+  const handleChatSubmit = useCallback(async (prompt: string, style?: string) => {
     if (!prompt) return;
 
     const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: prompt };
@@ -275,8 +265,10 @@ export default function Home() {
     setIsProcessing(true);
     isDrawingProcessRunning.current = true;
     
+    let thinkingMessageId: string | null = null;
     try {
       const aiResponse: ChatMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Ok, I will draw that for you...', isLoading: true };
+      thinkingMessageId = aiResponse.id;
       setChatMessages(prev => [...prev, aiResponse]);
 
       const canvas = canvasRef.current;
@@ -299,6 +291,7 @@ export default function Home() {
         isLoading: false
       };
       setChatMessages(prev => prev.map(msg => msg.id === finalResponse.id ? finalResponse : msg));
+      thinkingMessageId = null; // Don't replace this message on error
 
       for (const step of result.steps) {
         if (!isDrawingProcessRunning.current) {
@@ -311,40 +304,47 @@ export default function Home() {
 
     } catch (error) {
       console.error('Error with AI chat generation:', error);
+      const errorContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       const errorResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: thinkingMessageId || (Date.now() + 1).toString(),
           role: 'assistant',
           content: 'Sorry, I was unable to process that drawing request. Please try another prompt.',
           isLoading: false
       };
-      setChatMessages(prev => prev.map(msg => msg.isLoading ? errorResponse : msg));
-      toast({ variant: 'destructive', title: 'Drawing Failed', description: 'Something went wrong. Please try again.' });
+      if (thinkingMessageId) {
+        setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? errorResponse : msg));
+      } else {
+        setChatMessages(prev => [...prev, errorResponse]);
+      }
+      toast({ variant: 'destructive', title: 'Drawing Failed', description: errorContent });
     } finally {
       setIsProcessing(false);
       isDrawingProcessRunning.current = false;
-      const finalMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Finished drawing!',
-          isLoading: false
-      };
-      setChatMessages(prev => [...prev, finalMessage]);
+      if (thinkingMessageId === null) { // Only add finished message if drawing started
+        const finalMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: 'Finished drawing!',
+            isLoading: false
+        };
+        setChatMessages(prev => [...prev, finalMessage]);
+      }
     }
-  };
+  }, [drawStep, toast, isMobile]);
 
-  const handleStopDrawing = () => {
+  const handleStopDrawing = useCallback(() => {
     isDrawingProcessRunning.current = false;
     setIsProcessing(false);
-  }
+  }, []);
 
-  const handleColorPick = (color: string) => {
+  const handleColorPick = useCallback((color: string) => {
     setStrokeColor(color);
     setTool('brush');
     toast({
       title: 'Color Picked!',
       description: `Your stroke color is now ${color.toUpperCase()}. Switched back to Brush tool.`,
     });
-  }
+  }, [toast]);
 
 
   if (showWelcome) {
@@ -385,7 +385,8 @@ export default function Home() {
           className={cn(
             'transition-all duration-300 ease-in-out',
             isChatOpen ? 'w-full md:w-[380px]' : 'w-0',
-            { 'hidden': !isChatOpen }
+            { 'hidden md:block': !isChatOpen },
+             isChatOpen && isMobile ? 'absolute inset-0 z-50' : ''
           )}
         >
           <SashaChat
