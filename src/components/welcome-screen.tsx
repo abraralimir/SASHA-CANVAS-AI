@@ -8,7 +8,7 @@ export default function WelcomeScreen() {
       <div className="text-center">
         <div className="flex justify-center items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <LogoIcon className="h-16 w-16" />
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-primary font-headline">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-primary to-accent font-headline">
             Sasha Canvas AI
           </h1>
         </div>
