@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/erase-and-repair-with-ai.ts';
+import '@/ai/flows/enhance-sketch-with-ai.ts';
+import '@/ai/flows/generate-image-from-text.ts';
