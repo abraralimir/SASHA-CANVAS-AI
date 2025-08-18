@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { DrawingTool, ChatMessage } from '@/lib/types';
+import type { DrawingTool, ChatMessage, DrawingStep } from '@/lib/types';
 import DrawingCanvas from '@/components/canvas/drawing-canvas';
 import Toolbar from '@/components/canvas/toolbar';
 import SashaChat from '@/components/ai/sasha-chat';
@@ -15,13 +15,13 @@ import {
   eraseAndRepairWithAI,
   EraseAndRepairWithAIInput,
 } from '@/ai/flows/erase-and-repair-with-ai';
+import {
+  generateDrawingSteps,
+  GenerateDrawingStepsInput,
+} from '@/ai/flows/generate-drawing-steps';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { Bot, PanelLeft } from 'lucide-react';
-import {
-  generateImageFromText,
-  GenerateImageFromTextInput,
-} from '@/ai/flows/generate-image-from-text';
+import { Bot, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Home() {
@@ -33,6 +33,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const isDrawingProcessRunning = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const selectionCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -215,8 +216,7 @@ export default function Home() {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      // You might want to let the user place the image, but for now, we draw it at 0,0
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
     img.src = dataUri;
     if (isMobile) {
@@ -224,41 +224,102 @@ export default function Home() {
     }
     toast({ title: "Image Added", description: "The AI-generated image has been added to your canvas." });
   };
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const drawStep = (ctx: CanvasRenderingContext2D, step: DrawingStep) => {
+    ctx.beginPath();
+    ctx.strokeStyle = step.color;
+    ctx.lineWidth = step.strokeWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (step.tool === 'pen' || step.tool === 'line') {
+      ctx.moveTo(step.points[0].x, step.points[0].y);
+      for (let i = 1; i < step.points.length; i++) {
+        ctx.lineTo(step.points[i].x, step.points[i].y);
+      }
+    } else if (step.tool === 'rectangle') {
+      const start = step.points[0];
+      const end = step.points[1];
+      ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
+    } else if (step.tool === 'circle') {
+      const start = step.points[0];
+      const end = step.points[1];
+      const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+      ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+    }
+    ctx.stroke();
+  };
   
   const handleChatSubmit = async (prompt: string) => {
     if (!prompt) return;
 
     const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: prompt };
     setChatMessages(prev => [...prev, newUserMessage]);
+    setIsProcessing(true);
+    isDrawingProcessRunning.current = true;
     
     try {
-      const aiResponse: ChatMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Generating image...', isLoading: true };
+      const aiResponse: ChatMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Ok, I will draw that for you...', isLoading: true };
       setChatMessages(prev => [...prev, aiResponse]);
 
-      const input: GenerateImageFromTextInput = { prompt };
-      const result = await generateImageFromText(input);
+      const canvas = canvasRef.current;
+      if (!canvas) throw new Error("Canvas not found");
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Canvas context not found");
 
+      const input: GenerateDrawingStepsInput = { 
+        prompt,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+      };
+      const result = await generateDrawingSteps(input);
+      
       const finalResponse: ChatMessage = {
-          id: aiResponse.id,
-          role: 'assistant',
-          content: 'Here is the image I generated for you. You can add it to the canvas.',
-          imageUrl: result.image,
-          isLoading: false
+        id: aiResponse.id,
+        role: 'assistant',
+        content: `I'm starting to draw "${prompt}". You can stop me at any time.`,
+        isLoading: false
       };
       setChatMessages(prev => prev.map(msg => msg.id === finalResponse.id ? finalResponse : msg));
+
+      for (const step of result.steps) {
+        if (!isDrawingProcessRunning.current) {
+          toast({ title: "Drawing stopped by user." });
+          break;
+        }
+        drawStep(ctx, step);
+        await sleep(50); // Small delay to visualize drawing
+      }
 
     } catch (error) {
       console.error('Error with AI chat generation:', error);
       const errorResponse: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: 'Sorry, I was unable to generate an image. Please try another prompt.',
+          content: 'Sorry, I was unable to process that drawing request. Please try another prompt.',
           isLoading: false
       };
       setChatMessages(prev => prev.map(msg => msg.isLoading ? errorResponse : msg));
-      toast({ variant: 'destructive', title: 'Image Generation Failed', description: 'Something went wrong. Please try again.' });
+      toast({ variant: 'destructive', title: 'Drawing Failed', description: 'Something went wrong. Please try again.' });
+    } finally {
+      setIsProcessing(false);
+      isDrawingProcessRunning.current = false;
+      const finalMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'Finished drawing!',
+          isLoading: false
+      };
+      setChatMessages(prev => [...prev, finalMessage]);
     }
   };
+
+  const handleStopDrawing = () => {
+    isDrawingProcessRunning.current = false;
+    setIsProcessing(false);
+  }
 
   const handleColorPick = (color: string) => {
     setStrokeColor(color);
@@ -317,6 +378,8 @@ export default function Home() {
              onImageSelect={addImageToCanvas}
              isMobile={isMobile}
              onClose={() => setIsChatOpen(false)}
+             isProcessing={isProcessing}
+             onStop={handleStopDrawing}
           />
         </div>
       </main>
@@ -330,6 +393,18 @@ export default function Home() {
       >
         <Bot className="h-6 w-6" />
       </Button>
+      {isProcessing && (
+        <Button
+            variant="destructive"
+            size="lg"
+            className="fixed bottom-24 right-4 z-20 rounded-full h-14 shadow-lg gap-2"
+            onClick={handleStopDrawing}
+            aria-label="Stop AI Drawing"
+        >
+            <Square className="h-5 w-5" />
+            Stop
+        </Button>
+      )}
     </div>
   );
 }

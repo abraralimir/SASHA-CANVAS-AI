@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft } from 'lucide-react';
+import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft, Square } from 'lucide-react';
 import type { ChatMessage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ interface SashaChatProps {
   onImageSelect: (dataUri: string) => void;
   isMobile: boolean;
   onClose: () => void;
+  isProcessing: boolean;
+  onStop: () => void;
 }
 
 export default function SashaChat({
@@ -25,6 +27,8 @@ export default function SashaChat({
   onImageSelect,
   isMobile,
   onClose,
+  isProcessing,
+  onStop,
 }: SashaChatProps) {
   const [prompt, setPrompt] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -37,7 +41,7 @@ export default function SashaChat({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || isProcessing) return;
     onSubmit(prompt);
     setPrompt('');
   };
@@ -55,7 +59,7 @@ export default function SashaChat({
         )}>
           {msg.isLoading ? (
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 animate-pulse" />
+              <Sparkles className="w-4 h-4 animate-spin" />
               <span>Thinking...</span>
             </div>
           ) : (
@@ -94,8 +98,8 @@ export default function SashaChat({
             {messages.length === 0 ? (
                 <div className="text-center text-muted-foreground mt-8">
                     <Sparkles className="mx-auto h-12 w-12 mb-4"/>
-                    <p>Describe an image you want to create!</p>
-                    <p className="text-xs mt-2">e.g., "A robot painting a sunset"</p>
+                    <p>Describe what you want me to draw!</p>
+                    <p className="text-xs mt-2">e.g., "a robot painting a sunset"</p>
                 </div>
             ) : (
               messages.map((msg) => <ChatBubble key={msg.id} msg={msg} />)
@@ -108,17 +112,33 @@ export default function SashaChat({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask Sasha to draw something..."
-              className="pr-12"
+              className="pr-20"
+              disabled={isProcessing}
             />
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
-              variant="primary"
-              style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            {isProcessing ? (
+                 <Button
+                    type="button"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    variant="destructive"
+                    onClick={onStop}
+                 >
+                    <Square className="h-4 w-4 mr-2"/>
+                    Stop
+                 </Button>
+            ) : (
+                 <Button
+                    type="submit"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                    variant="primary"
+                    disabled={!prompt.trim()}
+                    style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}
+                 >
+                    <Send className="h-4 w-4" />
+                 </Button>
+            )}
+
           </form>
         </div>
       </div>

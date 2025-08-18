@@ -22,3 +22,11 @@ export interface ChatMessage {
     imageUrl?: string;
     isLoading?: boolean;
 }
+
+export interface DrawingStep {
+  tool: 'pen' | 'line' | 'rectangle' | 'circle';
+  color: string;
+  strokeWidth: number;
+  points: Point[];
+  thought?: string;
+}

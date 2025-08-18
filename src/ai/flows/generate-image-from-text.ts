@@ -1,7 +1,8 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt using the Gemini 2.0 Flash image generation model.
+ * @fileOverview DEPRECATED: This flow is deprecated in favor of generate-drawing-steps.
+ * It generates a static image from a text prompt.
  *
  * - generateImageFromText - A function that takes a text prompt and returns a data URI of the generated image.
  * - GenerateImageFromTextInput - The input type for the generateImageFromText function.
