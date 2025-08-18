@@ -287,7 +287,7 @@ export default function Home() {
         setCanvasColor={setCanvasColor}
         onClear={handleClear}
         onDownload={handleDownload}
-        onAiComplete={onAiComplete}
+        onAiComplete={handleAiComplete}
         onImageUpload={handleImageUpload}
         isProcessing={isProcessing}
       />
