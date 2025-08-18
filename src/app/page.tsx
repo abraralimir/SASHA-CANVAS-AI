@@ -22,6 +22,7 @@ import {
   generateImageFromText,
   GenerateImageFromTextInput,
 } from '@/ai/flows/generate-image-from-text';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
