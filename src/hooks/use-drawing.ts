@@ -41,9 +41,35 @@ export function useDrawing({
     const ctx = getCanvasContext(canvas);
     if (!ctx) return;
     
-    ctx.fillStyle = canvasColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // This seems to be causing a flicker, let's just set the bg color
+    // and let the user clear it explicitly.
+    // ctx.fillStyle = canvasColor;
+    // ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, [canvasColor, canvasRef, getCanvasContext]);
+
+
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+     if (!canvas) return;
+    const ctx = getCanvasContext(canvas);
+    if (!ctx) return;
+    
+    const { width, height } = canvas.getBoundingClientRect();
+    // Save drawing
+    const drawing = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    canvas.width = width;
+    canvas.height = height;
+
+    // Restore drawing
+    ctx.putImageData(drawing, 0, 0);
+
+    const selectionCanvas = selectionCanvasRef.current;
+    if(selectionCanvas) {
+        selectionCanvas.width = width;
+        selectionCanvas.height = height;
+    }
+  }, [canvasRef, selectionCanvasRef, getCanvasContext]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,7 +86,12 @@ export function useDrawing({
         selectionCanvas.width = selectionCanvas.offsetWidth;
         selectionCanvas.height = selectionCanvas.offsetHeight;
     }
-  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext]);
+
+    window.addEventListener('resize', resizeCanvas);
+    return () => {
+        window.removeEventListener('resize', resizeCanvas);
+    };
+  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvas]);
 
   const getPoint = (e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;

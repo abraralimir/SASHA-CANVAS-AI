@@ -1,25 +1,33 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft, Square } from 'lucide-react';
+import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft, Square, Palette } from 'lucide-react';
 import type { ChatMessage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '../ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SashaChatProps {
   messages: ChatMessage[];
-  onSubmit: (prompt: string) => void;
+  onSubmit: (prompt: string, style?: string) => void;
   onImageSelect: (dataUri: string) => void;
   isMobile: boolean;
   onClose: () => void;
   isProcessing: boolean;
   onStop: () => void;
 }
+
+const drawingStyles = ["Watercolor", "Oil Painting", "Charcoal Sketch", "Cartoon", "Pixel Art", "Futuristic"];
 
 export default function SashaChat({
   messages,
@@ -31,6 +39,7 @@ export default function SashaChat({
   onStop,
 }: SashaChatProps) {
   const [prompt, setPrompt] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,7 +51,7 @@ export default function SashaChat({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim() || isProcessing) return;
-    onSubmit(prompt);
+    onSubmit(prompt, selectedStyle);
     setPrompt('');
   };
   
@@ -106,7 +115,21 @@ export default function SashaChat({
             )}
           </div>
         </ScrollArea>
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-4">
+           <div className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-muted-foreground" />
+              <Select onValueChange={setSelectedStyle} defaultValue="">
+                  <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose a style (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="">Default</SelectItem>
+                      {drawingStyles.map(style => (
+                          <SelectItem key={style} value={style.toLowerCase()}>{style}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+           </div>
           <form onSubmit={handleSubmit} className="relative">
             <Input
               value={prompt}
@@ -138,7 +161,6 @@ export default function SashaChat({
                     <Send className="h-4 w-4" />
                  </Button>
             )}
-
           </form>
         </div>
       </div>

@@ -202,7 +202,13 @@ export default function Home() {
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Scale image to fit canvas
+        const hRatio = canvas.width / img.width;
+        const vRatio = canvas.height / img.height;
+        const ratio = Math.min(hRatio, vRatio);
+        const centerShift_x = (canvas.width - img.width * ratio) / 2;
+        const centerShift_y = (canvas.height - img.height * ratio) / 2;
+        ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
       };
       img.src = event.target?.result as string;
     };
@@ -216,7 +222,13 @@ export default function Home() {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // Scale image to fit canvas
+      const hRatio = canvas.width / img.width;
+      const vRatio = canvas.height / img.height;
+      const ratio = Math.min(hRatio, vRatio);
+      const centerShift_x = (canvas.width - img.width * ratio) / 2;
+      const centerShift_y = (canvas.height - img.height * ratio) / 2;
+      ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
     };
     img.src = dataUri;
     if (isMobile) {
@@ -255,7 +267,7 @@ export default function Home() {
     ctx.stroke();
   };
   
-  const handleChatSubmit = async (prompt: string) => {
+  const handleChatSubmit = async (prompt: string, style?: string) => {
     if (!prompt) return;
 
     const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: prompt };
@@ -276,13 +288,14 @@ export default function Home() {
         prompt,
         canvasWidth: canvas.width,
         canvasHeight: canvas.height,
+        style: style
       };
       const result = await generateDrawingSteps(input);
       
       const finalResponse: ChatMessage = {
         id: aiResponse.id,
         role: 'assistant',
-        content: `I'm starting to draw "${prompt}". You can stop me at any time.`,
+        content: `I'm starting to draw "${prompt}" in a ${style || 'default'} style. You can stop me at any time.`,
         isLoading: false
       };
       setChatMessages(prev => prev.map(msg => msg.id === finalResponse.id ? finalResponse : msg));

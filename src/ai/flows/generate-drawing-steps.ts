@@ -31,6 +31,7 @@ const GenerateDrawingStepsInputSchema = z.object({
   prompt: z.string().describe('The user\'s request for what to draw.'),
   canvasWidth: z.number().describe('The width of the canvas.'),
   canvasHeight: z.number().describe('The height of the canvas.'),
+  style: z.string().optional().describe('The artistic style to apply (e.g., "watercolor", "oil painting", "sketch").')
 });
 export type GenerateDrawingStepsInput = z.infer<typeof GenerateDrawingStepsInputSchema>;
 
@@ -51,14 +52,24 @@ const drawingPrompt = ai.definePrompt({
   prompt: `You are an expert AI artist. Your task is to interpret a user's prompt and convert it into a series of drawing steps to create the artwork on a digital canvas. You are a painter, not just a line drawer.
 
 The user wants you to draw: "{{prompt}}"
+{{#if style}}
+The user has requested the following style: "{{style}}"
+{{/if}}
 
 The canvas size is {{canvasWidth}}px wide and {{canvasHeight}}px tall.
 
 Think like a painter. Break down the drawing process into logical steps. Start with broad strokes and background colors, then layer on details, shadows, and highlights. Use the 'brush' tool for most of your work, varying the stroke width and color to create texture and depth.
 
+If a style is requested, adapt your technique:
+- For "Watercolor", use semi-transparent colors (e.g., #FF000080) and let colors bleed into each other. Use wet-on-wet techniques by layering transparent washes.
+- For "Oil Painting", use thick, opaque brush strokes. Build up texture with impasto-like techniques. Blend colors on the canvas.
+- For "Charcoal Sketch", primarily use black, white, and grey tones. Use the 'brush' tool with varying widths to simulate different charcoal sticks and use an 'eraser' for highlights.
+- For "Cartoon", use bold, clean lines and flat areas of solid color.
+- For "Pixel Art", use the 'rectangle' tool to draw individual pixels with a limited color palette.
+
 For each step, you must decide:
 1.  The 'thought': Briefly explain what part of the painting you are working on (e.g., "Blocking in the sky with a light blue wash," "Adding shadows to the mountains," "Detailing the eyes with a fine brush").
-2.  The 'tool': Choose from 'brush', 'line', 'rectangle', or 'circle'. Use 'brush' for freeform shapes, painting, and details.
+2.  The 'tool': Choose from 'brush', 'line', 'rectangle', 'circle'. Use 'brush' for freeform shapes, painting, and details.
 3.  The 'color': Select an appropriate hex color code. You can use colors with alpha for transparency (e.g., #FF000080 for semi-transparent red).
 4.  The 'strokeWidth': Choose a suitable stroke width, from wide for backgrounds to fine for details.
 5.  The 'points': Provide the coordinates for the tool.
