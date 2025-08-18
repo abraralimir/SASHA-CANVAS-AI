@@ -260,6 +260,15 @@ export default function Home() {
     }
   };
 
+  const handleColorPick = (color: string) => {
+    setStrokeColor(color);
+    setTool('pen');
+    toast({
+      title: 'Color Picked!',
+      description: `Your stroke color is now ${color.toUpperCase()}. Switched back to Pen tool.`,
+    });
+  }
+
 
   if (showWelcome) {
     return <WelcomeScreen />;
@@ -278,7 +287,7 @@ export default function Home() {
         setCanvasColor={setCanvasColor}
         onClear={handleClear}
         onDownload={handleDownload}
-        onAiComplete={handleAiComplete}
+        onAiComplete={onAiComplete}
         onImageUpload={handleImageUpload}
         isProcessing={isProcessing}
       />
@@ -292,6 +301,7 @@ export default function Home() {
             strokeWidth={strokeWidth}
             canvasColor={canvasColor}
             onAiErase={handleAiErase}
+            onColorPick={handleColorPick}
           />
         </div>
         <div

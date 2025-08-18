@@ -57,6 +57,7 @@ const tools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
   { name: 'circle', icon: Circle, label: 'Circle' },
   { name: 'triangle', icon: Triangle, label: 'Triangle' },
   { name: 'eraser', icon: Eraser, label: 'Eraser' },
+  { name: 'pipette', icon: Pipette, label: 'Color Picker' },
   { name: 'ai-eraser', icon: Sparkles, label: 'AI Eraser' },
 ];
 

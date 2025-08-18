@@ -12,11 +12,12 @@ interface DrawingCanvasProps {
   canvasColor: string;
   selectionCanvasRef: React.RefObject<HTMLCanvasElement>;
   onAiErase: () => void;
+  onColorPick: (color: string) => void;
 }
 
 const DrawingCanvas = forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
   (
-    { tool, strokeColor, strokeWidth, canvasColor, selectionCanvasRef, onAiErase },
+    { tool, strokeColor, strokeWidth, canvasColor, selectionCanvasRef, onAiErase, onColorPick },
     ref
   ) => {
     const { handleMouseDown, handleMouseUp, handleMouseMove, handleMouseLeave } = useDrawing({
@@ -27,10 +28,11 @@ const DrawingCanvas = forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
       strokeWidth,
       canvasColor,
       onAiErase,
+      onColorPick,
     });
 
     return (
-      <div className="relative w-full h-full max-w-[1200px] max-h-[800px] aspect-[1.5/1] shadow-2xl rounded-lg overflow-hidden bg-white">
+      <div className={cn("relative w-full h-full max-w-[1200px] max-h-[800px] aspect-[1.5/1] shadow-2xl rounded-lg overflow-hidden bg-white", tool === 'pipette' && 'cursor-crosshair')}>
         <canvas
           ref={ref}
           className="absolute top-0 left-0 w-full h-full"

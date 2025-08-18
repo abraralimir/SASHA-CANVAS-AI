@@ -11,6 +11,7 @@ interface UseDrawingProps {
   strokeWidth: number;
   canvasColor: string;
   onAiErase: () => void;
+  onColorPick: (color: string) => void;
 }
 
 export function useDrawing({
@@ -21,6 +22,7 @@ export function useDrawing({
   strokeWidth,
   canvasColor,
   onAiErase,
+  onColorPick,
 }: UseDrawingProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const startPoint = useRef<Point | null>(null);
@@ -105,13 +107,24 @@ export function useDrawing({
   };
   
   const handleMouseDown = useCallback((e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>) => {
+    const point = getPoint(e);
+
+    if (tool === 'pipette') {
+      const mainCanvas = canvasRef.current;
+      const ctx = getCanvasContext(mainCanvas);
+      if (!ctx) return;
+      const pixel = ctx.getImageData(point.x, point.y, 1, 1).data;
+      const hexColor = `#${("000000" + ((pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16)).slice(-6)}`;
+      onColorPick(hexColor);
+      return;
+    }
+
     const canvas = tool === 'ai-eraser' ? selectionCanvasRef.current : canvasRef.current;
     if (!canvas) return;
     const ctx = getCanvasContext(canvas);
     if (!ctx) return;
 
     setIsDrawing(true);
-    const point = getPoint(e);
     startPoint.current = point;
 
     if (tool !== 'pen' && tool !== 'eraser' && tool !== 'ai-eraser') {
@@ -138,7 +151,7 @@ export function useDrawing({
     if (tool === 'pen' || tool === 'eraser' || tool === 'ai-eraser') {
       ctx.moveTo(point.x, point.y);
     }
-  }, [tool, strokeWidth, strokeColor, canvasColor, canvasRef, selectionCanvasRef, getCanvasContext]);
+  }, [tool, strokeWidth, strokeColor, canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, onColorPick]);
 
   const handleMouseMove = useCallback((e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
