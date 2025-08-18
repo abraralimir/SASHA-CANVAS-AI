@@ -1,8 +1,6 @@
 'use server';
-
 /**
- * @fileOverview DEPRECATED: This flow is deprecated in favor of generate-drawing-steps.
- * It generates a static image from a text prompt.
+ * @fileOverview This file defines a Genkit flow to generate a high-quality image from a text prompt.
  *
  * - generateImageFromText - A function that takes a text prompt and returns a data URI of the generated image.
  * - GenerateImageFromTextInput - The input type for the generateImageFromText function.

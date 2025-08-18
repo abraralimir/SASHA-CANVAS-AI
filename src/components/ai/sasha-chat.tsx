@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft, Square, Palette } from 'lucide-react';
+import { Bot, Send, X, Sparkles, Image as ImageIcon, CornerDownLeft, Square, Palette, Wand2 } from 'lucide-react';
 import type { ChatMessage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -24,41 +33,81 @@ interface SashaChatProps {
   isMobile: boolean;
   onClose: () => void;
   isProcessing: boolean;
-  onStop: () => void;
+  onEnhance: (imageUrl: string, prompt: string) => void;
 }
 
-const drawingStyles = ["default", "watercolor", "oil painting", "charcoal sketch", "cartoon", "pixel art", "futuristic"];
+const drawingStyles = ["default", "photorealistic", "watercolor", "oil painting", "charcoal sketch", "cartoon", "pixel art", "futuristic", "cyberpunk", "fantasy"];
 
-const ChatBubble = React.memo(({ msg, onImageSelect }: { msg: ChatMessage, onImageSelect: (dataUri: string) => void }) => {
+const ChatBubble = React.memo(({ msg, onImageSelect, onEnhance }: { msg: ChatMessage, onImageSelect: (dataUri: string) => void, onEnhance: (imageUrl: string, prompt: string) => void }) => {
   const isAssistant = msg.role === 'assistant';
+  const [isEnhanceDialogOpen, setIsEnhanceDialogOpen] = useState(false);
+  const [enhancePrompt, setEnhancePrompt] = useState("");
+
+  const handleEnhanceClick = () => {
+    if (!enhancePrompt.trim()) return;
+    onEnhance(msg.imageUrl!, enhancePrompt);
+    setIsEnhanceDialogOpen(false);
+    setEnhancePrompt("");
+  };
+
   return (
-    <div className={cn("flex items-start gap-3 my-4", isAssistant ? "" : "flex-row-reverse")}>
-      <Avatar className="w-8 h-8">
-        <AvatarFallback>{isAssistant ? <Bot /> : 'U'}</AvatarFallback>
-      </Avatar>
-      <div className={cn(
-        "max-w-[75%] rounded-lg p-3 text-sm",
-        isAssistant ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
-      )}>
-        {msg.isLoading ? (
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 animate-spin" />
-            <span>Thinking...</span>
-          </div>
-        ) : (
-          <p className="whitespace-pre-wrap">{msg.content}</p>
-        )}
-        {msg.imageUrl && (
-          <div className="mt-2 relative group">
-            <Image src={msg.imageUrl} alt="Generated image" width={256} height={256} className="rounded-md border" data-ai-hint="abstract painting" />
-            <Button size="sm" className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onImageSelect(msg.imageUrl!)}>
-              <ImageIcon className="w-4 h-4 mr-2" />
-              Add to Canvas
-            </Button>
-          </div>
-        )}
+    <>
+      <div className={cn("flex items-start gap-3 my-4", isAssistant ? "" : "flex-row-reverse")}>
+        <Avatar className="w-8 h-8">
+          <AvatarFallback>{isAssistant ? <Bot /> : 'U'}</AvatarFallback>
+        </Avatar>
+        <div className={cn(
+          "max-w-[75%] rounded-lg p-3 text-sm",
+          isAssistant ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
+        )}>
+          {msg.isLoading ? (
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 animate-spin" />
+              <span>{msg.content || "Thinking..."}</span>
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap">{msg.content}</p>
+          )}
+          {msg.imageUrl && (
+            <div className="mt-2 relative group">
+              <Image src={msg.imageUrl} alt="Generated image" width={256} height={256} className="rounded-md border" data-ai-hint="abstract painting" />
+              <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="sm" onClick={() => onImageSelect(msg.imageUrl!)}>
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Use
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setIsEnhanceDialogOpen(true)}>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Enhance
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      <Dialog open={isEnhanceDialogOpen} onOpenChange={setIsEnhanceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enhance Image</DialogTitle>
+            <DialogDescription>
+              Describe how you'd like to enhance or change this image.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Textarea
+              placeholder="e.g., 'make the sky more dramatic', 'add a small boat on the lake', 'change the style to cyberpunk'"
+              value={enhancePrompt}
+              onChange={(e) => setEnhancePrompt(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleEnhanceClick}>Enhance</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 });
 ChatBubble.displayName = "ChatBubble";
@@ -70,11 +119,10 @@ export default function SashaChat({
   isMobile,
   onClose,
   isProcessing,
-  onStop,
+  onEnhance,
 }: SashaChatProps) {
   const [prompt, setPrompt] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('default');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,11 +134,11 @@ export default function SashaChat({
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim() || isProcessing) return;
-    onSubmit(prompt, selectedStyle === 'default' ? '' : selectedStyle);
+    onSubmit(prompt, selectedStyle === 'default' ? undefined : selectedStyle);
     setPrompt('');
   }, [prompt, selectedStyle, isProcessing, onSubmit]);
   
-  const ChatContainer = (
+  return (
       <div className="flex h-full flex-col bg-card border-l">
         <header className="flex h-16 items-center justify-between border-b px-4 shrink-0">
           <div className="flex items-center gap-2">
@@ -108,11 +156,11 @@ export default function SashaChat({
             {messages.length === 0 ? (
                 <div className="text-center text-muted-foreground mt-8">
                     <Sparkles className="mx-auto h-12 w-12 mb-4"/>
-                    <p>Describe what you want me to draw!</p>
-                    <p className="text-xs mt-2">e.g., "a robot painting a sunset"</p>
+                    <p>Describe what you want me to create or edit!</p>
+                    <p className="text-xs mt-2">e.g., "a robot painting a sunset" or "make the background darker"</p>
                 </div>
             ) : (
-              messages.map((msg) => <ChatBubble key={msg.id} msg={msg} onImageSelect={onImageSelect} />)
+              messages.map((msg) => <ChatBubble key={msg.id} msg={msg} onImageSelect={onImageSelect} onEnhance={onEnhance} />)
             )}
           </div>
         </ScrollArea>
@@ -136,37 +184,22 @@ export default function SashaChat({
             <Input
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask Sasha to draw something..."
-              className="pr-20"
+              placeholder="Ask Sasha to create or edit..."
+              className="pr-12"
               disabled={isProcessing}
             />
-            {isProcessing ? (
-                 <Button
-                    type="button"
-                    size="sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2"
-                    variant="destructive"
-                    onClick={onStop}
-                 >
-                    <Square className="h-4 w-4 mr-2"/>
-                    Stop
-                 </Button>
-            ) : (
-                 <Button
-                    type="submit"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
-                    variant="primary"
-                    disabled={!prompt.trim()}
-                    style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}
-                 >
-                    <Send className="h-4 w-4" />
-                 </Button>
-            )}
+            <Button
+                type="submit"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                variant="primary"
+                disabled={!prompt.trim() || isProcessing}
+                style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}
+            >
+                {isProcessing ? <Sparkles className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
           </form>
         </div>
       </div>
   )
-  
-  return ChatContainer;
 }

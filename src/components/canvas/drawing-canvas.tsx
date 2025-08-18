@@ -13,11 +13,12 @@ interface DrawingCanvasProps {
   selectionCanvasRef: React.RefObject<HTMLCanvasElement>;
   onAiErase: () => void;
   onColorPick: (color: string) => void;
+  onDrawEnd: () => void;
 }
 
 const DrawingCanvas = forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
   (
-    { tool, strokeColor, strokeWidth, canvasColor, selectionCanvasRef, onAiErase, onColorPick },
+    { tool, strokeColor, strokeWidth, canvasColor, selectionCanvasRef, onAiErase, onColorPick, onDrawEnd },
     ref
   ) => {
     const { handleMouseDown, handleMouseUp, handleMouseMove, handleMouseLeave } = useDrawing({
@@ -29,6 +30,7 @@ const DrawingCanvas = forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
       canvasColor,
       onAiErase,
       onColorPick,
+      onDrawEnd,
     });
 
     return (

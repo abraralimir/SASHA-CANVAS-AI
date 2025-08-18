@@ -12,6 +12,7 @@ interface UseDrawingProps {
   canvasColor: string;
   onAiErase: () => void;
   onColorPick: (color: string) => void;
+  onDrawEnd: () => void;
 }
 
 export function useDrawing({
@@ -23,6 +24,7 @@ export function useDrawing({
   canvasColor,
   onAiErase,
   onColorPick,
+  onDrawEnd,
 }: UseDrawingProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const startPoint = useRef<Point | null>(null);
@@ -44,7 +46,8 @@ export function useDrawing({
     // Set the background color, user can clear explicitly.
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, [canvasColor, canvasRef, getCanvasContext]);
+    onDrawEnd();
+  }, [canvasColor, canvasRef, getCanvasContext, onDrawEnd]);
 
 
   const resizeCanvases = useCallback(() => {
@@ -86,12 +89,13 @@ export function useDrawing({
     if (!ctx) return;
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    onDrawEnd();
 
     window.addEventListener('resize', resizeCanvases);
     return () => {
         window.removeEventListener('resize', resizeCanvases);
     };
-  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvases]);
+  }, [canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, resizeCanvases, onDrawEnd]);
 
   const getPoint = (e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
@@ -231,8 +235,9 @@ export function useDrawing({
       }
       onAiErase();
     }
+    onDrawEnd();
     snapshot.current = null;
-  }, [isDrawing, tool, selectionCanvasRef, onAiErase, getCanvasContext]);
+  }, [isDrawing, tool, selectionCanvasRef, onAiErase, getCanvasContext, onDrawEnd]);
 
   const handleMouseLeave = useCallback(() => {
     if (isDrawing) {

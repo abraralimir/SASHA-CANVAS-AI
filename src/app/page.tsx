@@ -16,9 +16,9 @@ import {
   EraseAndRepairWithAIInput,
 } from '@/ai/flows/erase-and-repair-with-ai';
 import {
-  generateDrawingSteps,
-  GenerateDrawingStepsInput,
-} from '@/ai/flows/generate-drawing-steps';
+  generateImageFromText,
+  GenerateImageFromTextInput,
+} from '@/ai/flows/generate-image-from-text';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Bot, Square } from 'lucide-react';
@@ -33,10 +33,11 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const isDrawingProcessRunning = useRef(false);
-
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const selectionCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Ref to track if the canvas is empty (has drawings or images)
+  const isCanvasEmpty = useRef(true);
 
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -53,13 +54,24 @@ export default function Home() {
       setIsChatOpen(false);
     }
   }, [isMobile]);
+  
+  const updateCanvasEmptyState = useCallback(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const pixelBuffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+      const allWhite = !pixelBuffer.some(color => (color & 0x00ffffff) !== 0x00ffffff);
+      isCanvasEmpty.current = allWhite;
+  }, []);
 
   const getCanvasData = useCallback(
     (canvas: HTMLCanvasElement | null): string => {
       if (!canvas) return '';
+      updateCanvasEmptyState(); // Update state whenever we get data
       return canvas.toDataURL('image/png');
     },
-    []
+    [updateCanvasEmptyState]
   );
 
   const handleClear = useCallback(() => {
@@ -69,6 +81,7 @@ export default function Home() {
     if (!ctx) return;
     ctx.fillStyle = canvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    isCanvasEmpty.current = true;
   }, [canvasColor]);
 
   const handleDownload = useCallback(async () => {
@@ -76,6 +89,7 @@ export default function Home() {
     if (!dataUri) return;
 
     setIsProcessing(true);
+    setTool('download');
     toast({
       title: 'Enhancing Image...',
       description: 'Our AI is adding the final touches before download.',
@@ -116,6 +130,7 @@ export default function Home() {
     if (!dataUri) return;
 
     setIsProcessing(true);
+    setTool('ai-complete');
     toast({
       title: 'AI Completion in Progress...',
       description: 'Sasha is reimagining your sketch. Please wait.',
@@ -132,6 +147,7 @@ export default function Home() {
         if (!ctx) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        isCanvasEmpty.current = false;
       };
       img.src = result.enhancedImageDataUri;
     } catch (error) {
@@ -178,6 +194,7 @@ export default function Home() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         selectionCtx.clearRect(0, 0, selectionCanvas.width, selectionCanvas.height);
+        isCanvasEmpty.current = false;
       };
       img.src = result.repairedDrawingDataUri;
     } catch (error) {
@@ -202,7 +219,9 @@ export default function Home() {
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        isCanvasEmpty.current = false;
       };
       img.src = event.target?.result as string;
     };
@@ -216,7 +235,9 @@ export default function Home() {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      isCanvasEmpty.current = false;
     };
     img.src = dataUri;
     if (isMobile) {
@@ -224,118 +245,115 @@ export default function Home() {
     }
     toast({ title: "Image Added", description: "The AI-generated image has been added to your canvas." });
   }, [isMobile, toast]);
-
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const drawStep = useCallback((ctx: CanvasRenderingContext2D, step: DrawingStep) => {
-    ctx.beginPath();
-    ctx.strokeStyle = step.color;
-    ctx.fillStyle = step.color;
-    ctx.lineWidth = step.strokeWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    if (step.tool === 'brush' || step.tool === 'line') {
-      if (step.points.length > 0) {
-        ctx.moveTo(step.points[0].x, step.points[0].y);
-        for (let i = 1; i < step.points.length; i++) {
-          ctx.lineTo(step.points[i].x, step.points[i].y);
-        }
-      }
-    } else if (step.tool === 'rectangle') {
-      if (step.points.length < 2) return;
-      const start = step.points[0];
-      const end = step.points[1];
-      ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
-    } else if (step.tool === 'circle') {
-      if (step.points.length < 2) return;
-      const start = step.points[0];
-      const end = step.points[1];
-      const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-      ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
-    }
-    ctx.stroke();
-  }, []);
   
   const handleChatSubmit = useCallback(async (prompt: string, style?: string) => {
-    if (!prompt) return;
+      if (!prompt) return;
 
+      const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: prompt };
+      setChatMessages(prev => [...prev, newUserMessage]);
+      setIsProcessing(true);
+
+      const thinkingMessageId = (Date.now() + 1).toString();
+      try {
+        const aiThinkingMessage: ChatMessage = { id: thinkingMessageId, role: 'assistant', content: 'Thinking...', isLoading: true };
+        setChatMessages(prev => [...prev, aiThinkingMessage]);
+        
+        let result;
+        // If the canvas is empty or there's no specific prompt for editing, generate a new image.
+        if (isCanvasEmpty.current) {
+          const fullPrompt = style ? `${prompt} in the style of ${style}` : prompt;
+          const input: GenerateImageFromTextInput = { prompt: fullPrompt };
+          result = await generateImageFromText(input);
+          addImageToCanvas(result.image);
+
+          const finalResponse: ChatMessage = {
+              id: thinkingMessageId,
+              role: 'assistant',
+              content: `I've created an image for: "${prompt}". You can now ask me to edit it.`,
+              imageUrl: result.image,
+              isLoading: false,
+          };
+          setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? finalResponse : msg));
+
+        } else {
+          // If there is content on the canvas, treat the prompt as an edit request.
+          const canvasDataUri = getCanvasData(canvasRef.current);
+          if (!canvasDataUri) throw new Error('Could not get canvas data.');
+
+          const input: EnhanceSketchWithAIInput = {
+              sketchDataUri: canvasDataUri,
+              prompt: style ? `${prompt} in the style of ${style}` : prompt,
+          };
+          result = await enhanceSketchWithAI(input);
+          addImageToCanvas(result.enhancedImageDataUri);
+
+          const finalResponse: ChatMessage = {
+              id: thinkingMessageId,
+              role: 'assistant',
+              content: `I've updated the image based on your request: "${prompt}".`,
+              imageUrl: result.enhancedImageDataUri,
+              isLoading: false,
+          };
+          setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? finalResponse : msg));
+        }
+      } catch (error) {
+        console.error('Error with AI chat submission:', error);
+        const errorContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+        const errorResponse: ChatMessage = {
+            id: thinkingMessageId,
+            role: 'assistant',
+            content: 'Sorry, I was unable to process that request. Please try again.',
+            isLoading: false,
+        };
+        setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? errorResponse : msg));
+        toast({ variant: 'destructive', title: 'AI Request Failed', description: errorContent });
+      } finally {
+        setIsProcessing(false);
+      }
+  }, [getCanvasData, addImageToCanvas, toast]);
+
+  const handleEnhanceImage = useCallback(async (imageUrl: string, prompt: string) => {
+    setIsProcessing(true);
     const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', content: prompt };
     setChatMessages(prev => [...prev, newUserMessage]);
-    setIsProcessing(true);
-    isDrawingProcessRunning.current = true;
     
-    let thinkingMessageId: string | null = null;
+    const thinkingMessageId = (Date.now() + 1).toString();
+    const aiThinkingMessage: ChatMessage = { id: thinkingMessageId, role: 'assistant', content: 'Enhancing...', isLoading: true };
+    setChatMessages(prev => [...prev, aiThinkingMessage]);
+
     try {
-      const aiResponse: ChatMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: 'Ok, I will draw that for you...', isLoading: true };
-      thinkingMessageId = aiResponse.id;
-      setChatMessages(prev => [...prev, aiResponse]);
+        const input: EnhanceSketchWithAIInput = {
+            sketchDataUri: imageUrl,
+            prompt: prompt,
+        };
+        const result = await enhanceSketchWithAI(input);
+        addImageToCanvas(result.enhancedImageDataUri);
 
-      const canvas = canvasRef.current;
-      if (!canvas) throw new Error("Canvas not found");
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error("Canvas context not found");
-
-      const input: GenerateDrawingStepsInput = { 
-        prompt,
-        canvasWidth: canvas.width,
-        canvasHeight: canvas.height,
-        style: style
-      };
-      const result = await generateDrawingSteps(input);
-      
-      const finalResponse: ChatMessage = {
-        id: aiResponse.id,
-        role: 'assistant',
-        content: `I'm starting to draw "${prompt}" in a ${style || 'default'} style. You can stop me at any time.`,
-        isLoading: false
-      };
-      setChatMessages(prev => prev.map(msg => msg.id === finalResponse.id ? finalResponse : msg));
-      thinkingMessageId = null; // Don't replace this message on error
-
-      for (const step of result.steps) {
-        if (!isDrawingProcessRunning.current) {
-          toast({ title: "Drawing stopped by user." });
-          break;
-        }
-        drawStep(ctx, step);
-        await sleep(50); // Small delay to visualize drawing
-      }
+        const finalResponse: ChatMessage = {
+            id: thinkingMessageId,
+            role: 'assistant',
+            content: `I've enhanced the image based on your request.`,
+            imageUrl: result.enhancedImageDataUri,
+            isLoading: false,
+        };
+        setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? finalResponse : msg));
 
     } catch (error) {
-      console.error('Error with AI chat generation:', error);
-      const errorContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-      const errorResponse: ChatMessage = {
-          id: thinkingMessageId || (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Sorry, I was unable to process that drawing request. Please try another prompt.',
-          isLoading: false
-      };
-      if (thinkingMessageId) {
-        setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? errorResponse : msg));
-      } else {
-        setChatMessages(prev => [...prev, errorResponse]);
-      }
-      toast({ variant: 'destructive', title: 'Drawing Failed', description: errorContent });
-    } finally {
-      setIsProcessing(false);
-      isDrawingProcessRunning.current = false;
-      if (thinkingMessageId === null) { // Only add finished message if drawing started
-        const finalMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
+        console.error('Error enhancing image:', error);
+        const errorContent = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+        const errorResponse: ChatMessage = {
+            id: thinkingMessageId,
             role: 'assistant',
-            content: 'Finished drawing!',
-            isLoading: false
+            content: 'Sorry, I was unable to enhance the image.',
+            isLoading: false,
         };
-        setChatMessages(prev => [...prev, finalMessage]);
-      }
+        setChatMessages(prev => prev.map(msg => msg.id === thinkingMessageId ? errorResponse : msg));
+        toast({ variant: 'destructive', title: 'Enhancement Failed', description: errorContent });
+    } finally {
+        setIsProcessing(false);
     }
-  }, [drawStep, toast, isMobile]);
+  }, [addImageToCanvas, toast]);
 
-  const handleStopDrawing = useCallback(() => {
-    isDrawingProcessRunning.current = false;
-    setIsProcessing(false);
-  }, []);
 
   const handleColorPick = useCallback((color: string) => {
     setStrokeColor(color);
@@ -379,6 +397,7 @@ export default function Home() {
             canvasColor={canvasColor}
             onAiErase={handleAiErase}
             onColorPick={handleColorPick}
+            onDrawEnd={updateCanvasEmptyState}
           />
         </div>
         <div
@@ -396,7 +415,7 @@ export default function Home() {
              isMobile={isMobile}
              onClose={() => setIsChatOpen(false)}
              isProcessing={isProcessing}
-             onStop={handleStopDrawing}
+             onEnhance={handleEnhanceImage}
           />
         </div>
       </main>
@@ -410,18 +429,6 @@ export default function Home() {
       >
         <Bot className="h-6 w-6" />
       </Button>
-      {isProcessing && isDrawingProcessRunning.current && (
-        <Button
-            variant="destructive"
-            size="lg"
-            className="fixed bottom-24 right-4 z-20 rounded-full h-14 shadow-lg gap-2"
-            onClick={handleStopDrawing}
-            aria-label="Stop AI Drawing"
-        >
-            <Square className="h-5 w-5" />
-            Stop
-        </Button>
-      )}
     </div>
   );
 }
