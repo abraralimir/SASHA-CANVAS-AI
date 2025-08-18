@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
-  const [tool, setTool] = useState<DrawingTool>('pen');
+  const [tool, setTool] = useState<DrawingTool>('brush');
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(5);
   const [canvasColor, setCanvasColor] = useState('#ffffff');
@@ -189,7 +189,7 @@ export default function Home() {
       });
     } finally {
       setIsProcessing(false);
-      setTool('pen');
+      setTool('brush');
     }
   }, [getCanvasData, toast]);
   
@@ -230,14 +230,17 @@ export default function Home() {
   const drawStep = (ctx: CanvasRenderingContext2D, step: DrawingStep) => {
     ctx.beginPath();
     ctx.strokeStyle = step.color;
+    ctx.fillStyle = step.color;
     ctx.lineWidth = step.strokeWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    if (step.tool === 'pen' || step.tool === 'line') {
-      ctx.moveTo(step.points[0].x, step.points[0].y);
-      for (let i = 1; i < step.points.length; i++) {
-        ctx.lineTo(step.points[i].x, step.points[i].y);
+    if (step.tool === 'brush' || step.tool === 'line') {
+      if (step.points.length > 0) {
+        ctx.moveTo(step.points[0].x, step.points[0].y);
+        for (let i = 1; i < step.points.length; i++) {
+          ctx.lineTo(step.points[i].x, step.points[i].y);
+        }
       }
     } else if (step.tool === 'rectangle') {
       const start = step.points[0];
@@ -323,10 +326,10 @@ export default function Home() {
 
   const handleColorPick = (color: string) => {
     setStrokeColor(color);
-    setTool('pen');
+    setTool('brush');
     toast({
       title: 'Color Picked!',
-      description: `Your stroke color is now ${color.toUpperCase()}. Switched back to Pen tool.`,
+      description: `Your stroke color is now ${color.toUpperCase()}. Switched back to Brush tool.`,
     });
   }
 
@@ -393,7 +396,7 @@ export default function Home() {
       >
         <Bot className="h-6 w-6" />
       </Button>
-      {isProcessing && (
+      {isProcessing && isDrawingProcessRunning.current && (
         <Button
             variant="destructive"
             size="lg"

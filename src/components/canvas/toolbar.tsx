@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  Pen,
+  Brush,
   Minus,
   RectangleHorizontal,
   Circle,
@@ -51,7 +51,7 @@ interface ToolbarProps {
 }
 
 const tools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
-  { name: 'pen', icon: Pen, label: 'Pen' },
+  { name: 'brush', icon: Brush, label: 'Brush' },
   { name: 'line', icon: Minus, label: 'Line' },
   { name: 'rectangle', icon: RectangleHorizontal, label: 'Rectangle' },
   { name: 'circle', icon: Circle, label: 'Circle' },

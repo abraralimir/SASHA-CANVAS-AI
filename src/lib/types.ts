@@ -1,5 +1,5 @@
 export type DrawingTool =
-  | 'pen'
+  | 'brush'
   | 'line'
   | 'rectangle'
   | 'circle'
@@ -24,7 +24,7 @@ export interface ChatMessage {
 }
 
 export interface DrawingStep {
-  tool: 'pen' | 'line' | 'rectangle' | 'circle';
+  tool: 'brush' | 'line' | 'rectangle' | 'circle';
   color: string;
   strokeWidth: number;
   points: Point[];

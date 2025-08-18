@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const PointSchema = z.object({
   x: z.number(),
@@ -17,13 +17,13 @@ const PointSchema = z.object({
 
 const DrawingStepSchema = z.object({
   tool: z
-    .enum(['pen', 'line', 'rectangle', 'circle'])
+    .enum(['brush', 'line', 'rectangle', 'circle'])
     .describe('The drawing tool to use for this step.'),
   color: z.string().describe('The hex color code for the stroke (e.g., "#FF0000").'),
   strokeWidth: z.number().describe('The width of the stroke.'),
   points: z
     .array(PointSchema)
-    .describe('An array of points to define the shape. "pen" and "line" use a series of points. "rectangle" and "circle" use two points (start and end).'),
+    .describe('An array of points to define the shape. "brush" and "line" use a series of points. "rectangle" and "circle" use two points (start and end).'),
   thought: z.string().optional().describe("The AI's thought process for this drawing step."),
 });
 
@@ -48,23 +48,25 @@ const drawingPrompt = ai.definePrompt({
   name: 'drawingAgentPrompt',
   input: { schema: GenerateDrawingStepsInputSchema },
   output: { schema: GenerateDrawingStepsOutputSchema },
-  prompt: `You are an expert AI artist. Your task is to interpret a user's prompt and convert it into a series of drawing steps to create the artwork on a digital canvas.
+  prompt: `You are an expert AI artist. Your task is to interpret a user's prompt and convert it into a series of drawing steps to create the artwork on a digital canvas. You are a painter, not just a line drawer.
 
 The user wants you to draw: "{{prompt}}"
 
 The canvas size is {{canvasWidth}}px wide and {{canvasHeight}}px tall.
 
-Break down the drawing process into logical steps. For each step, you must decide:
-1.  The "thought": Briefly explain what you are about to draw.
-2.  The "tool": Choose from 'pen', 'line', 'rectangle', or 'circle'. Use 'pen' for freeform shapes and details.
-3.  The "color": Select an appropriate hex color code.
-4.  The "strokeWidth": Choose a suitable stroke width.
-5.  The "points": Provide the coordinates for the tool.
-    - For 'pen' and 'line', provide a sequence of points.
+Think like a painter. Break down the drawing process into logical steps. Start with broad strokes and background colors, then layer on details, shadows, and highlights. Use the 'brush' tool for most of your work, varying the stroke width and color to create texture and depth.
+
+For each step, you must decide:
+1.  The 'thought': Briefly explain what part of the painting you are working on (e.g., "Blocking in the sky with a light blue wash," "Adding shadows to the mountains," "Detailing the eyes with a fine brush").
+2.  The 'tool': Choose from 'brush', 'line', 'rectangle', or 'circle'. Use 'brush' for freeform shapes, painting, and details.
+3.  The 'color': Select an appropriate hex color code. You can use colors with alpha for transparency (e.g., #FF000080 for semi-transparent red).
+4.  The 'strokeWidth': Choose a suitable stroke width, from wide for backgrounds to fine for details.
+5.  The 'points': Provide the coordinates for the tool.
+    - For 'brush' and 'line', provide a sequence of points.
     - For 'rectangle', provide the top-left and bottom-right corner points.
     - For 'circle', provide the center point and a point on the circumference.
 
-Generate a JSON object that contains a "steps" array, following the defined output schema. Ensure all coordinates are within the canvas dimensions (0-{{canvasWidth}}, 0-{{canvasHeight}}). Be creative and detailed.
+Generate a JSON object that contains a "steps" array, following the defined output schema. Ensure all coordinates are within the canvas dimensions (0-{{canvasWidth}}, 0-{{canvasHeight}}). Be creative, artistic, and detailed.
 `,
 });
 

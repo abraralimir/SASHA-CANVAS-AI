@@ -127,7 +127,7 @@ export function useDrawing({
     setIsDrawing(true);
     startPoint.current = point;
 
-    if (tool !== 'pen' && tool !== 'eraser' && tool !== 'ai-eraser') {
+    if (tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser') {
       snapshot.current = getCanvasContext(canvasRef.current)?.getImageData(0, 0, canvas.width, canvas.height) ?? null;
     }
 
@@ -148,7 +148,7 @@ export function useDrawing({
     }
 
 
-    if (tool === 'pen' || tool === 'eraser' || tool === 'ai-eraser') {
+    if (tool === 'brush' || tool === 'eraser' || tool === 'ai-eraser') {
       ctx.moveTo(point.x, point.y);
     }
   }, [tool, strokeWidth, strokeColor, canvasColor, canvasRef, selectionCanvasRef, getCanvasContext, onColorPick]);
@@ -163,12 +163,12 @@ export function useDrawing({
     const ctx = getCanvasContext(canvas);
     if (!ctx || !startPoint.current) return;
 
-    if (snapshot.current && tool !== 'pen' && tool !== 'eraser' && tool !== 'ai-eraser') {
+    if (snapshot.current && tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser') {
       getCanvasContext(mainCanvas)?.putImageData(snapshot.current, 0, 0);
     }
     
     switch (tool) {
-      case 'pen':
+      case 'brush':
       case 'eraser':
       case 'ai-eraser':
         ctx.lineTo(currentPoint.x, currentPoint.y);
