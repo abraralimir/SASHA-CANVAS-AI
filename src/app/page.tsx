@@ -331,25 +331,25 @@ export default function Home() {
         if (!canvas) throw new Error('Canvas not found');
 
         if (isCanvasEmpty.current) {
-          const input: GenerateDrawingStepsInput = {
-            prompt: prompt,
-            canvasWidth: canvas.width,
-            canvasHeight: canvas.height,
-            style: style,
+           const fullPrompt = style && style !== 'default'
+            ? `${prompt} in a ${style} style`
+            : prompt;
+          const input: GenerateImageFromTextInput = {
+            prompt: fullPrompt,
           };
-          result = await generateDrawingSteps(input);
+          result = await generateImageFromText(input);
+          addImageToCanvas(result.image);
           
           const finalResponse: ChatMessage = {
             id: thinkingMessageId,
             role: 'assistant',
-            content: `I've started drawing: "${prompt}". You can ask me to edit it once I'm done.`,
+            content: `I've created an image for: "${prompt}". You can ask me to edit it.`,
+            imageUrl: result.image,
             isLoading: false,
           };
           setChatMessages((prev) =>
             prev.map((msg) => (msg.id === thinkingMessageId ? finalResponse : msg))
           );
-          playDrawingSteps(result.steps);
-
         } else {
           // If there is content on the canvas, treat the prompt as an edit request.
           const canvasDataUri = getCanvasData(canvasRef.current);
@@ -398,7 +398,7 @@ export default function Home() {
         setIsProcessing(false);
       }
     },
-    [getCanvasData, addImageToCanvas, toast, playDrawingSteps, stopDrawing]
+    [getCanvasData, addImageToCanvas, toast, stopDrawing]
   );
 
   const handleEnhanceImage = useCallback(
@@ -516,9 +516,9 @@ export default function Home() {
         <div
           className={cn(
             'transition-all duration-300 ease-in-out',
+            'md:block',
             isChatOpen ? 'w-full md:w-[380px]' : 'w-0',
-            { 'md:block': !isChatOpen },
-             isChatOpen && isMobile ? 'absolute inset-0 z-50 bg-background' : 'hidden'
+            isChatOpen && isMobile ? 'absolute inset-0 z-50 bg-background' : 'hidden'
           )}
         >
           <SashaChat
