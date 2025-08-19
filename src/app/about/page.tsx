@@ -30,18 +30,24 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImagePromise = generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
-  const showcaseImagePromise = generateImageFromText({ prompt: "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere." });
-
-  const [headerImageResult, showcaseImageResult] = await Promise.all([
-    headerImagePromise,
-    showcaseImagePromise
-  ]);
-  
-  const headerImageUrl = headerImageResult.image;
-  const showcaseImageUrl = showcaseImageResult.image;
+  let headerImageUrl = "https://placehold.co/1920x1080.png";
+  let showcaseImageUrl = "https://placehold.co/1280x720.png";
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
-  
+
+  try {
+    const headerImageResult = await generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
+    headerImageUrl = headerImageResult.image;
+  } catch (error) {
+    console.error("Failed to generate header image, using fallback.", error);
+  }
+
+  try {
+    const showcaseImageResult = await generateImageFromText({ prompt: showcaseImagePrompt });
+    showcaseImageUrl = showcaseImageResult.image;
+  } catch (error) {
+    console.error("Failed to generate showcase image, using fallback.", error);
+  }
+
   return (
     <div className="relative h-full w-full">
       <div className="fixed inset-0 -z-10 overflow-hidden">
