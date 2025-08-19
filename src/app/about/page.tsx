@@ -7,14 +7,14 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-const FeatureCard = ({ icon, title, description, imageUrl }: { icon: React.ReactNode, title: string, description: string, imageUrl: string }) => (
+const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataAiHint }: { icon: React.ReactNode, title: string, description: string, imageUrl: string, 'data-ai-hint': string }) => (
     <div className="flex flex-col items-center text-center gap-4 p-1">
       <div className="relative w-full h-48 rounded-lg overflow-hidden border border-primary/20 shadow-lg">
         <Image
           src={imageUrl}
           alt={title}
           fill
-          data-ai-hint="futuristic interface"
+          data-ai-hint={dataAiHint}
           className="object-cover"
         />
       </div>
@@ -116,24 +116,28 @@ export default async function AboutPage() {
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
                         imageUrl="https://placehold.co/600x400.png"
+                        data-ai-hint="text to image"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
                         imageUrl="https://placehold.co/600x400.png"
+                        data-ai-hint="intelligent editing"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
                         imageUrl="https://placehold.co/600x400.png"
+                        data-ai-hint="drawing tools"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
                         imageUrl="https://placehold.co/600x400.png"
+                        data-ai-hint="ai eraser"
                    />
                 </CardContent>
             </Card>
