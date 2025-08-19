@@ -1,12 +1,15 @@
-'use client';
+'use server';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, Paintbrush, Sparkles, Wand2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon } from 'lucide-react';
+import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-    <div className="flex items-start gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div className="flex items-start gap-4 p-1">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         {icon}
       </div>
       <div>
@@ -16,58 +19,80 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
     </div>
 );
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Generate a unique, artistic image for the header on each page load.
+  const { image: headerImageUrl } = await generateImageFromText({
+    prompt: 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.',
+  });
+
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-8">
+    <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
         <div className="max-w-4xl mx-auto space-y-8">
-            <Card className="overflow-hidden">
-                <CardHeader className="bg-muted/30 p-8">
-                    <div className="flex flex-col md:flex-row items-start gap-6">
-                        <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
-                           <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
-                               <Bot />
-                           </AvatarFallback>
-                        </Avatar>
-                        <div className="pt-2">
-                           <CardTitle className="text-4xl font-bold tracking-tight">Sasha Canvas AI</CardTitle>
+            <Card className="overflow-hidden shadow-xl">
+                <div className="relative h-64 w-full">
+                    <Image
+                        src={headerImageUrl}
+                        alt="AI-generated artwork representing creativity"
+                        layout="fill"
+                        objectFit="cover"
+                        data-ai-hint="abstract painting"
+                    />
+                     <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                </div>
+                <CardHeader className="relative -mt-20 z-10 p-8">
+                    <div className="flex items-center gap-4">
+                       <div className="p-3 rounded-full bg-primary/20 border-4 border-background shadow-lg">
+                           <Bot className="w-10 h-10 text-primary" />
+                       </div>
+                       <div>
+                           <CardTitle className="text-4xl font-bold tracking-tight text-foreground">Sasha Canvas AI</CardTitle>
                            <p className="text-xl text-muted-foreground mt-1">Your Creative Partner for Digital Art</p>
-                        </div>
+                       </div>
                     </div>
                 </CardHeader>
-                <CardContent className="p-8 space-y-6 text-lg">
-                    <p className="leading-relaxed">
+                <CardContent className="p-8 pt-0 space-y-4 text-lg">
+                     <p className="leading-relaxed">
                         Welcome to <span className="font-semibold text-primary">Sasha Canvas AI</span>, an intelligent drawing application designed to bridge the gap between imagination and digital art. Sasha is more than just a tool; it's a creative partner that helps you generate, refine, and bring your ideas to life with the power of artificial intelligence.
                     </p>
                      <p className="leading-relaxed">
-                        Whether you're a professional artist looking for a brainstorming companion, a hobbyist exploring new creative avenues, or someone who just wants to have fun with AI-powered art, Sasha provides a seamless and intuitive canvas. Simply describe what you want to see, and watch as Sasha transforms your words into stunning visuals.
+                        Whether you're a professional artist, a hobbyist, or just curious about AI, Sasha provides an intuitive canvas to transform your words into stunning visuals.
                     </p>
                 </CardContent>
+                <CardFooter className="bg-muted/30 px-8 py-4">
+                    <Button asChild size="lg" className="w-full md:w-auto shadow-lg" variant="primary">
+                        <Link href="/canvas">
+                            Try Sasha Now
+                            <Sparkles className="ml-2 h-5 w-5"/>
+                        </Link>
+                    </Button>
+                </CardFooter>
             </Card>
 
              <Card>
                 <CardHeader>
                     <CardTitle>Core Features</CardTitle>
+                    <CardDescription>Explore what you can do with Sasha</CardDescription>
                 </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-8">
+                <CardContent className="grid md:grid-cols-2 gap-x-8 gap-y-6">
                    <FeatureCard
-                        icon={<Sparkles className="h-6 w-6" />}
+                        icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
-                        description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description, providing an instant foundation for your artwork."
+                        description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
-                        description="Treat Sasha like a true collaborator. After generating or uploading an image, use natural language to request edits—change colors, add elements, or alter the style."
+                        description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
-                        description="Take full manual control with a classic set of drawing tools. Use brushes, shapes, an eraser, and a color picker to refine AI generations or create from scratch."
+                        description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
                    />
                    <FeatureCard
-                        icon={<Bot className="h-6 w-6" />}
-                        title="Conversational AI Chat"
-                        description="Interact with Sasha through an intuitive chat interface. Your entire creative process becomes a dialogue, making it easy to iterate and experiment."
+                        icon={<Sparkles className="h-6 w-6" />}
+                        title="AI-Powered Eraser"
+                        description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
                    />
                 </CardContent>
             </Card>
