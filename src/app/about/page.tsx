@@ -14,7 +14,8 @@ const FeatureCard = ({ icon, title, description, imageUrl }: { icon: React.React
           src={imageUrl}
           alt={title}
           fill
-          objectFit="cover"
+          data-ai-hint="futuristic interface"
+          className="object-cover"
         />
       </div>
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary -mt-8 bg-background border-4 border-background">
@@ -31,27 +32,9 @@ export default async function AboutPage() {
   const headerImagePrompt = 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.';
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
   
-  const featurePrompts = {
-      textToImage: "A digital canvas showing a text prompt 'a majestic lion in a field of stars' transforming into a beautiful, high-resolution painting of the lion.",
-      intelligentEditing: "A split-screen image. On the left, a simple sketch of a house. On the right, the same sketch transformed into a photorealistic architectural rendering with vibrant colors and textures, demonstrating an AI enhancement.",
-      drawingToolkit: "A digital artist's desk seen from above, with a tablet displaying a colorful abstract painting. Around the tablet are digital representations of brushes, a color palette, and shape tools, all glowing softly.",
-      aiEraser: "A hyper-realistic photo of a person standing at a beautiful waterfall. There is a distracting, ugly sign post to their right. A glowing, magical eraser is shown actively removing the sign post, with the background scenery seamlessly filling in the empty space."
-  };
-
-  const [
-    { image: headerImageUrl }, 
-    { image: showcaseImageUrl },
-    { image: textToImageUrl },
-    { image: intelligentEditingUrl },
-    { image: drawingToolkitUrl },
-    { image: aiEraserUrl },
-  ] = await Promise.all([
+  const [{ image: headerImageUrl }, { image: showcaseImageUrl }] = await Promise.all([
     generateImageFromText({ prompt: headerImagePrompt }),
     generateImageFromText({ prompt: showcaseImagePrompt }),
-    generateImageFromText({ prompt: featurePrompts.textToImage }),
-    generateImageFromText({ prompt: featurePrompts.intelligentEditing }),
-    generateImageFromText({ prompt: featurePrompts.drawingToolkit }),
-    generateImageFromText({ prompt: featurePrompts.aiEraser }),
   ]);
   
   return (
@@ -132,25 +115,25 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl={textToImageUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
-                        imageUrl={intelligentEditingUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
-                        imageUrl={drawingToolkitUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
-                        imageUrl={aiEraserUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                 </CardContent>
             </Card>
