@@ -31,7 +31,7 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImageUrl = "/images/about/header.png";
+  const headerImageUrl = "/images/about/header.jpg";
   const showcaseImageUrl = "/images/about/showcase.png";
   const textToImageUrl = "/images/about/feature-text-to-image.png";
   const intelligentEditingUrl = "/images/about/feature-intelligent-editing.png";
