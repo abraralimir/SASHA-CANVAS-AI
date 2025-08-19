@@ -34,16 +34,8 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 export default async function AboutPage() {
   let headerImageUrl = "https://placehold.co/1920x1080/0f172a/93c5fd.png";
   let showcaseImageUrl = "https://placehold.co/1280x720/0f172a/93c5fd.png";
-  let textToImageUrl = "https://placehold.co/600x400/1e293b/93c5fd.png";
-  let intelligentEditingUrl = "https://placehold.co/600x400/4a044e/f472b6.png";
-  let drawingToolkitUrl = "https://placehold.co/600x400/064e3b/6ee7b7.png";
-  let aiEraserUrl = "https://placehold.co/600x400/312e81/a5b4fc.png";
 
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
-  const textToImagePrompt = "A digital art canvas where the words 'a majestic lion in a vibrant jungle' are visibly transforming into a beautiful, detailed painting of that scene.";
-  const intelligentEditingPrompt = "A close-up, dramatic shot of a digital stylus touching a screen, enhancing a hyper-realistic oil painting of a stormy sea. Half the image is enhanced with vibrant, glowing colors and details, while the other half remains a sketch, showing the transformation.";
-  const drawingToolkitPrompt = "A digital artist's workspace. On a large, glowing screen, a beautiful and complex digital painting of a fantasy landscape is being created. Around the screen, we see floating UI elements of a drawing toolkit: color palettes, brushes, and layer panels.";
-  const aiEraserPrompt = "A photorealistic image where half of a red classic car has been perfectly erased from a cobblestone street scene, with the background scenery (buildings, sky) seamlessly and realistically filled in where the car used to be. The erasing effect should look magical, like dissipating pixels.";
   
   try {
     const headerImageResult = await generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
@@ -58,35 +50,6 @@ export default async function AboutPage() {
   } catch (error) {
     console.error("Failed to generate showcase image, using fallback.", error);
   }
-
-  try {
-    const textToImageResult = await generateImageFromText({ prompt: textToImagePrompt });
-    textToImageUrl = textToImageResult.image;
-  } catch (error) {
-    console.error("Failed to generate text-to-image feature image, using fallback.", error);
-  }
-
-  try {
-    const intelligentEditingResult = await generateImageFromText({ prompt: intelligentEditingPrompt });
-    intelligentEditingUrl = intelligentEditingResult.image;
-  } catch (error) {
-    console.error("Failed to generate intelligent editing image, using fallback.", error);
-  }
-  
-  try {
-    const drawingToolkitResult = await generateImageFromText({ prompt: drawingToolkitPrompt });
-    drawingToolkitUrl = drawingToolkitResult.image;
-  } catch (error) {
-    console.error("Failed to generate drawing toolkit image, using fallback.", error);
-  }
-  
-  try {
-    const aiEraserResult = await generateImageFromText({ prompt: aiEraserPrompt });
-    aiEraserUrl = aiEraserResult.image;
-  } catch (error) {
-    console.error("Failed to generate AI eraser image, using fallback.", error);
-  }
-
 
   return (
     <div className="relative h-full w-full">
@@ -166,28 +129,28 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl={textToImageUrl}
+                        imageUrl="https://placehold.co/600x400/1e293b/93c5fd.png"
                         data-ai-hint="text to image"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
-                        imageUrl={intelligentEditingUrl}
+                        imageUrl="https://placehold.co/600x400/4a044e/f472b6.png"
                         data-ai-hint="intelligent editing"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
-                        imageUrl={drawingToolkitUrl}
+                        imageUrl="https://placehold.co/600x400/064e3b/6ee7b7.png"
                         data-ai-hint="drawing tools"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
-                        imageUrl={aiEraserUrl}
+                        imageUrl="https://placehold.co/600x400/312e81/a5b4fc.png"
                         data-ai-hint="ai eraser"
                    />
                 </CardContent>
