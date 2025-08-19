@@ -35,11 +35,11 @@ export default async function AboutPage() {
           objectFit="cover"
           data-ai-hint="abstract painting"
         />
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm" />
       </div>
       <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
         <div className="max-w-4xl mx-auto space-y-8">
-            <Card className="overflow-hidden shadow-xl bg-card/80">
+            <Card className="overflow-hidden shadow-xl bg-card/80 border-primary/20">
                 <CardHeader className="p-8">
                     <div className="flex items-center gap-4">
                        <div className="p-3 rounded-full bg-primary/20 border-4 border-background shadow-lg">
@@ -69,7 +69,7 @@ export default async function AboutPage() {
                 </CardFooter>
             </Card>
 
-             <Card className="bg-card/80">
+             <Card className="bg-card/80 border-primary/20">
                 <CardHeader>
                     <CardTitle>Core Features</CardTitle>
                     <CardDescription>Explore what you can do with Sasha</CardDescription>
