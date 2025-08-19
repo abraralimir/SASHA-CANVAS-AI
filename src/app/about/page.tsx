@@ -31,11 +31,11 @@ export default async function AboutPage() {
         <Image
           src={headerImageUrl}
           alt="AI-generated artwork representing creativity"
-          layout="fill"
+          fill
           objectFit="cover"
           data-ai-hint="abstract painting"
         />
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       </div>
       <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
         <div className="max-w-4xl mx-auto space-y-8">

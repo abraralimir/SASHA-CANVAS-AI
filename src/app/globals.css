@@ -4,11 +4,11 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 224 71% 4%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -20,18 +20,18 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 25.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 217.2 91.2% 59.8%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 224 71% 4%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
@@ -43,7 +43,7 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 25.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 217.2 91.2% 59.8%;
   }
@@ -54,6 +54,38 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(
+        at 27% 37%,
+        hsl(217, 91%, 59%, 0.1) 0px,
+        transparent 50%
+      ),
+      radial-gradient(at 97% 21%, hsl(215, 20%, 65%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, hsl(217, 32%, 17%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, hsl(217, 91%, 59%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 97% 96%, hsl(222, 84%, 4%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 33% 50%, hsl(217, 32%, 17%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 79% 53%, hsl(210, 40%, 98%, 0.1) 0px, transparent 50%);
+    background-size: 200% 200%;
+    animation: background-pan 30s linear infinite;
+  }
+}
+
+@keyframes background-pan {
+  0% {
+    background-position: 0% 0%;
+  }
+  25% {
+    background-position: 25% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 50% 25%;
+  }
+  100% {
+    background-position: 0% 0%;
   }
 }
