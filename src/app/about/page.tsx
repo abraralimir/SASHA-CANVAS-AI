@@ -34,7 +34,10 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 export default async function AboutPage() {
   let headerImageUrl = "https://placehold.co/1920x1080/0f172a/93c5fd.png";
   let showcaseImageUrl = "https://placehold.co/1280x720/0f172a/93c5fd.png";
+  let textToImageUrl = "https://placehold.co/600x400/1e293b/93c5fd.png";
+
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
+  const textToImagePrompt = "A digital art canvas where the words 'a majestic lion in a vibrant jungle' are visibly transforming into a beautiful, detailed painting of that scene.";
 
   try {
     const headerImageResult = await generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
@@ -49,6 +52,14 @@ export default async function AboutPage() {
     showcaseImageUrl = showcaseImageResult.image;
   } catch (error) {
     console.error("Failed to generate showcase image, using fallback.", error);
+    // Fallback URL is already set
+  }
+
+  try {
+    const textToImageResult = await generateImageFromText({ prompt: textToImagePrompt });
+    textToImageUrl = textToImageResult.image;
+  } catch (error) {
+    console.error("Failed to generate text-to-image feature image, using fallback.", error);
     // Fallback URL is already set
   }
 
@@ -130,7 +141,7 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl="https://placehold.co/600x400/1e293b/93c5fd.png"
+                        imageUrl={textToImageUrl}
                         data-ai-hint="text to image"
                    />
                    <FeatureCard
