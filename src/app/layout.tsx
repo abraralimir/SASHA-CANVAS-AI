@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { LogoIcon } from '@/components/icons';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     siteName: APP_NAME,
     images: [
       {
-        url: '/og-image.png', // Make sure to create this file in your /public folder
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Sasha Canvas AI promotional image',
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: APP_NAME,
     description: APP_DESCRIPTION,
-    images: ['/og-image.png'], // Make sure to create this file
+    images: ['/og-image.png'],
   },
   
   icons: {
@@ -65,16 +66,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* The Poppins font is already being loaded via next/font, so the direct link tags are not needed here and can cause performance issues. */}
-      </head>
+      <head />
       <body
         className={cn(
           'min-h-screen bg-background font-body antialiased',
           poppins.variable
         )}
       >
-        {children}
+        <SidebarProvider>
+            {children}
+        </SidebarProvider>
         <Toaster />
       </body>
     </html>
