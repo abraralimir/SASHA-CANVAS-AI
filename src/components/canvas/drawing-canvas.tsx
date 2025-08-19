@@ -34,12 +34,10 @@ const DrawingCanvas = forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
     });
     
     const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-      // e.preventDefault(); // This can prevent scroll on touch but might interfere with other touch features.
       handleMouseDown(e.touches[0]);
     }, [handleMouseDown]);
 
     const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-      // Prevent scrolling while drawing on mobile
       e.preventDefault();
       handleMouseMove(e.touches[0]);
     }, [handleMouseMove]);

@@ -65,8 +65,9 @@ export function useDrawing({
     selectionCanvas.height = height;
 
     mainCtx.putImageData(drawing, 0, 0);
+    setCanvasBackground();
 
-  }, [canvasRef, selectionCanvasRef, getCanvasContext]);
+  }, [canvasRef, selectionCanvasRef, getCanvasContext, setCanvasBackground]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -149,7 +150,10 @@ export function useDrawing({
     
     const mainCanvas = canvasRef.current;
     if (tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser' && mainCanvas) {
-      snapshot.current = getCanvasContext(mainCanvas)?.getImageData(0, 0, mainCanvas.width, mainCanvas.height) ?? null;
+      const mainCtx = getCanvasContext(mainCanvas);
+      if (mainCtx) {
+        snapshot.current = mainCtx.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
+      }
     }
 
     ctx.beginPath();
@@ -160,18 +164,15 @@ export function useDrawing({
 
     if (tool === 'eraser') {
       ctx.strokeStyle = canvasColor;
-    }
-    
-    if(tool === 'ai-eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+    } else if(tool === 'ai-eraser') {
        ctx.globalCompositeOperation = 'source-over';
     } else {
-       ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+       ctx.globalCompositeOperation = 'source-over';
     }
-
 
     if (tool === 'brush' || tool === 'eraser' || tool === 'ai-eraser') {
       ctx.moveTo(point.x, point.y);
-      // Draw a single dot on mousedown
       ctx.lineTo(point.x, point.y);
       ctx.stroke();
     }
@@ -186,13 +187,13 @@ export function useDrawing({
     
     const ctx = getCanvasContext(canvas);
     if (!ctx || !startPoint.current) return;
-
-    if (snapshot.current && tool !== 'brush' && tool !== 'eraser' && tool !== 'ai-eraser') {
-      getCanvasContext(mainCanvas)?.putImageData(snapshot.current, 0, 0);
-    }
     
     const currentToolCtx = (tool === 'brush' || tool === 'eraser' || tool === 'ai-eraser') ? ctx : getCanvasContext(mainCanvas);
     if (!currentToolCtx) return;
+
+    if (snapshot.current && currentToolCtx !== ctx) {
+      currentToolCtx.putImageData(snapshot.current, 0, 0);
+    }
 
     switch (tool) {
       case 'brush':

@@ -19,6 +19,10 @@ import {
   generateImageFromText,
   GenerateImageFromTextInput,
 } from '@/ai/flows/generate-image-from-text';
+import {
+  generateDrawingSteps,
+  GenerateDrawingStepsInput,
+} from '@/ai/flows/generate-drawing-steps';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Bot, Square } from 'lucide-react';
@@ -116,6 +120,77 @@ export default function CanvasPage() {
       setIsChatOpen(false);
     }
   }, [isMobile, handleClear]);
+  
+  const playDrawingSteps = useCallback((steps: DrawingStep[]) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    handleClear();
+    setIsDrawing(true);
+
+    let currentStepIndex = 0;
+
+    const playNextStep = () => {
+        if (currentStepIndex >= steps.length) {
+            setIsDrawing(false);
+            drawingPlayerId.current = null;
+            updateCanvasEmptyState();
+            return;
+        }
+
+        const step = steps[currentStepIndex];
+        ctx.strokeStyle = step.color;
+        ctx.fillStyle = step.color;
+        ctx.lineWidth = step.strokeWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = 'source-over';
+
+        // Add thought to chat
+         if (step.thought) {
+          const thoughtMessage: ChatMessage = {
+            id: `thought-${Date.now()}-${currentStepIndex}`,
+            role: 'assistant',
+            content: `Drawing: ${step.thought}`,
+            isLoading: true,
+          };
+           setChatMessages((prev) => [...prev.slice(0, -1), thoughtMessage]);
+        }
+
+        switch (step.tool) {
+            case 'brush':
+                ctx.beginPath();
+                ctx.moveTo(step.points[0].x, step.points[0].y);
+                for (let i = 1; i < step.points.length; i++) {
+                    ctx.lineTo(step.points[i].x, step.points[i].y);
+                }
+                ctx.stroke();
+                break;
+            case 'rectangle':
+                ctx.strokeRect(step.points[0].x, step.points[0].y, step.points[1].x - step.points[0].x, step.points[1].y - step.points[0].y);
+                break;
+            case 'circle':
+                ctx.beginPath();
+                const radius = Math.sqrt(Math.pow(step.points[1].x - step.points[0].x, 2) + Math.pow(step.points[1].y - step.points[0].y, 2));
+                ctx.arc(step.points[0].x, step.points[0].y, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+                break;
+            case 'line':
+                ctx.beginPath();
+                ctx.moveTo(step.points[0].x, step.points[0].y);
+                ctx.lineTo(step.points[1].x, step.points[1].y);
+                ctx.stroke();
+                break;
+        }
+
+        currentStepIndex++;
+        drawingPlayerId.current = setTimeout(playNextStep, 50); // Adjust delay for faster/slower drawing
+    };
+
+    playNextStep();
+}, [handleClear, updateCanvasEmptyState]);
 
   const handleDownload = useCallback(async () => {
     const dataUri = getCanvasData(canvasRef.current);
@@ -226,7 +301,7 @@ export default function CanvasPage() {
   
   const stopDrawing = useCallback(() => {
     if (drawingPlayerId.current) {
-      clearInterval(drawingPlayerId.current);
+      clearTimeout(drawingPlayerId.current);
       drawingPlayerId.current = null;
     }
     setIsDrawing(false);
@@ -260,20 +335,18 @@ export default function CanvasPage() {
         if (!canvas) throw new Error('Canvas not found');
 
         if (isCanvasEmpty.current) {
-           const fullPrompt = style && style !== 'default'
-            ? `${prompt} in a ${style} style`
-            : prompt;
-          const input: GenerateImageFromTextInput = {
-            prompt: fullPrompt,
+          const genStepsInput: GenerateDrawingStepsInput = {
+            prompt,
+            style,
+            canvasWidth: canvas.width,
+            canvasHeight: canvas.height,
           };
-          result = await generateImageFromText(input);
-          addImageToCanvas(result.image);
-          
-          const finalResponse: ChatMessage = {
+          const stepsResult = await generateDrawingSteps(genStepsInput);
+          playDrawingSteps(stepsResult.steps);
+           const finalResponse: ChatMessage = {
             id: thinkingMessageId,
             role: 'assistant',
-            content: `I've created an image for: "${prompt}". You can ask me to edit it.`,
-            imageUrl: result.image,
+            content: `Alright, I'm starting to draw: "${prompt}".`,
             isLoading: false,
           };
           setChatMessages((prev) =>
@@ -327,7 +400,7 @@ export default function CanvasPage() {
         setIsProcessing(false);
       }
     },
-    [getCanvasData, addImageToCanvas, toast, stopDrawing]
+    [getCanvasData, addImageToCanvas, toast, stopDrawing, playDrawingSteps]
   );
 
   const handleEnhanceImage = useCallback(
