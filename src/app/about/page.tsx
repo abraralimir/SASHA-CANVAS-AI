@@ -1,8 +1,8 @@
+
 'use server';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon, Lightbulb } from 'lucide-react';
-import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -29,13 +29,9 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImagePrompt = 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.';
+  const headerImageUrl = "https://placehold.co/1920x1080.png";
+  const showcaseImageUrl = "https://placehold.co/1280x720.png";
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
-  
-  const [{ image: headerImageUrl }, { image: showcaseImageUrl }] = await Promise.all([
-    generateImageFromText({ prompt: headerImagePrompt }),
-    generateImageFromText({ prompt: showcaseImagePrompt }),
-  ]);
   
   return (
     <div className="relative h-full w-full">
@@ -46,7 +42,7 @@ export default async function AboutPage() {
           fill
           objectFit="cover"
           className="animate-space-pan"
-          data-ai-hint="abstract painting"
+          data-ai-hint="abstract painting space"
         />
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       </div>
