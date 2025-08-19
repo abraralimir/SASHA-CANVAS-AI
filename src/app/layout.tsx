@@ -52,11 +52,6 @@ export const metadata: Metadata = {
     description: APP_DESCRIPTION,
     images: ['/og-image.png'],
   },
-  
-  icons: {
-    icon: '/favicon.svg',
-    apple: '/apple-touch-icon.png',
-  },
 };
 
 export default function RootLayout({
