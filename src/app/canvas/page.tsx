@@ -192,6 +192,49 @@ export default function CanvasPage() {
     playNextStep();
 }, [handleClear, updateCanvasEmptyState]);
 
+  const handleAutocomplete = useCallback(async () => {
+    if (isCanvasEmpty.current) {
+      toast({
+        variant: 'destructive',
+        title: 'Canvas is Empty',
+        description: 'Draw something first, and I can help you complete it!',
+      });
+      return;
+    }
+
+    const dataUri = getCanvasData(canvasRef.current);
+    if (!dataUri) return;
+
+    setIsProcessing(true);
+    setTool('autocomplete');
+    toast({
+      title: 'Enhancing Your Sketch...',
+      description: 'Sasha is adding some artistic flair. Please wait.',
+    });
+
+    try {
+      const result = await enhanceSketchWithAI({
+        sketchDataUri: dataUri,
+        prompt: 'Autocomplete this drawing. Enhance the existing sketch, making it more detailed, refined, and aesthetically pleasing. Complete any unfinished parts and beautify the overall image in a photorealistic style.',
+      });
+      addImageToCanvas(result.enhancedImageDataUri);
+      toast({
+        title: 'Sketch Autocompleted!',
+        description: "I've enhanced your drawing. Feel free to edit it further.",
+      });
+    } catch (error) {
+      console.error('Error autocompleting image:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Autocomplete Failed',
+        description: 'Sorry, I was unable to enhance the image this time.',
+      });
+    } finally {
+      setIsProcessing(false);
+      setTool('brush');
+    }
+  }, [getCanvasData, addImageToCanvas, toast]);
+
   const handleDownload = useCallback(async () => {
     const dataUri = getCanvasData(canvasRef.current);
     if (!dataUri) return;
@@ -497,6 +540,7 @@ export default function CanvasPage() {
         onClear={handleClear}
         onDownload={handleDownload}
         onImageUpload={handleImageUpload}
+        onAutocomplete={handleAutocomplete}
         isProcessing={isProcessing}
         isDrawing={isDrawing}
         onStopDrawing={stopDrawing}

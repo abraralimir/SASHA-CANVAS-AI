@@ -14,6 +14,7 @@ import {
   Trash2,
   Loader,
   Square,
+  Wand2,
 } from 'lucide-react';
 import type { DrawingTool } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ interface ToolbarProps {
   onClear: () => void;
   onDownload: () => void;
   onImageUpload: (file: File) => void;
+  onAutocomplete: () => void;
   isProcessing: boolean;
   isDrawing: boolean;
   onStopDrawing: () => void;
@@ -84,6 +86,7 @@ export default function Toolbar({
   onClear,
   onDownload,
   onImageUpload,
+  onAutocomplete,
   isProcessing,
   isDrawing,
   onStopDrawing
@@ -228,6 +231,10 @@ export default function Toolbar({
           
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onAutocomplete} disabled={isProcessing}>{isProcessing && tool==='autocomplete' ? <Loader className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />}</Button></TooltipTrigger>
+              <TooltipContent><p>Autocomplete Drawing</p></TooltipContent>
+            </Tooltip>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={handleUploadClick}><Upload className="h-5 w-5" /></Button></TooltipTrigger>
