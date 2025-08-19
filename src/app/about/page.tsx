@@ -31,12 +31,12 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImageUrl = "/images/about/header.jpg";
-  const showcaseImageUrl = "/images/about/showcase.png";
-  const textToImageUrl = "/images/about/feature-text-to-image.png";
-  const intelligentEditingUrl = "/images/about/feature-intelligent-editing.png";
-  const drawingToolkitUrl = "/images/about/feature-drawing-toolkit.png";
-  const aiEraserUrl = "/images/about/feature-ai-eraser.png";
+  const headerImageUrl = "/header.jpg";
+  const showcaseImageUrl = "/showcase.jpg";
+  const textToImageUrl = "/feature-text-to-image.jpg";
+  const intelligentEditingUrl = "/feature-intelligent-editing.jpg";
+  const drawingToolkitUrl = "/feature-drawing-toolkit.png";
+  const aiEraserUrl = "/feature-ai-eraser.png";
   
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
 
