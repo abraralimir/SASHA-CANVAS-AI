@@ -37,8 +37,8 @@ export default function CanvasLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <Link href="/canvas" legacyBehavior passHref>
+            <SidebarMenuItem asChild>
+              <Link href="/canvas">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/canvas')}
                   tooltip={{ children: 'Canvas' }}
@@ -48,8 +48,8 @@ export default function CanvasLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link href="/about" legacyBehavior passHref>
+            <SidebarMenuItem asChild>
+              <Link href="/about">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/about')}
                   tooltip={{ children: 'About Sasha' }}
