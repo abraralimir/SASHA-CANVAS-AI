@@ -33,27 +33,12 @@ export default async function AboutPage() {
   const headerImagePrompt = 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.';
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
   
-  const featurePrompts = {
-      textToImage: "A photorealistic image of a vintage camera lens transforming into a flock of birds, symbolizing the creation of imagery from a simple idea. Use dramatic lighting.",
-      editing: "An image split in two. On one side, a simple sketch of a castle. On the other, the same castle transformed into a hyper-detailed, fantastical fortress with banners and dragons, demonstrating a powerful enhancement.",
-      toolkit: "A digital artist's palette, but instead of paint blobs, there are glowing icons for a brush, eraser, and shapes, all floating above the palette. The style is clean and futuristic.",
-      aiEraser: "A beautiful landscape photo with a modern car in the middle. A glowing, magical light trail shows the car being erased, revealing the pristine nature that was behind it, perfectly seamless."
-  };
-
   const [
     { image: headerImageUrl }, 
     { image: showcaseImageUrl },
-    { image: textToImageUrl },
-    { image: editingUrl },
-    { image: toolkitUrl },
-    { image: aiEraserUrl }
   ] = await Promise.all([
     generateImageFromText({ prompt: headerImagePrompt }),
     generateImageFromText({ prompt: showcaseImagePrompt }),
-    generateImageFromText({ prompt: featurePrompts.textToImage }),
-    generateImageFromText({ prompt: featurePrompts.editing }),
-    generateImageFromText({ prompt: featurePrompts.toolkit }),
-    generateImageFromText({ prompt: featurePrompts.aiEraser })
   ]);
   
   return (
@@ -134,25 +119,25 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl={textToImageUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
-                        imageUrl={editingUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
-                        imageUrl={toolkitUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
-                        imageUrl={aiEraserUrl}
+                        imageUrl="https://placehold.co/600x400.png"
                    />
                 </CardContent>
             </Card>
