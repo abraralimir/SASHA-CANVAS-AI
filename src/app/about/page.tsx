@@ -9,24 +9,26 @@ import Link from 'next/link';
 import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataAiHint }: { icon: React.ReactNode, title: string, description: string, imageUrl: string, 'data-ai-hint': string }) => (
-    <div className="flex flex-col items-center text-center gap-4 p-1">
-      <div className="relative w-full h-48 rounded-lg overflow-hidden border border-primary/20 shadow-lg">
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          data-ai-hint={dataAiHint}
-          className="object-cover"
-        />
-      </div>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background text-primary -mt-8 border-4 border-background">
-        {icon}
-      </div>
-      <div className="mt-[-8px]">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-    </div>
+    <Card className="overflow-hidden bg-transparent border-none shadow-none text-center">
+      <CardHeader className="p-0">
+        <div className="relative w-full h-48">
+           <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              data-ai-hint={dataAiHint}
+              className="object-cover rounded-lg border border-primary/20 shadow-lg"
+           />
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 flex flex-col items-center gap-2">
+         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background text-primary -mt-10 border-4 border-background shadow-md">
+            {icon}
+         </div>
+         <h3 className="text-lg font-semibold mt-2">{title}</h3>
+         <p className="text-muted-foreground text-sm">{description}</p>
+      </CardContent>
+    </Card>
 );
 
 export default async function AboutPage() {
@@ -39,6 +41,7 @@ export default async function AboutPage() {
     headerImageUrl = headerImageResult.image;
   } catch (error) {
     console.error("Failed to generate header image, using fallback.", error);
+    // Fallback URL is already set
   }
 
   try {
@@ -46,6 +49,7 @@ export default async function AboutPage() {
     showcaseImageUrl = showcaseImageResult.image;
   } catch (error) {
     console.error("Failed to generate showcase image, using fallback.", error);
+    // Fallback URL is already set
   }
 
   return (
@@ -126,28 +130,28 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl="https://placehold.co/600x400.png"
+                        imageUrl="https://placehold.co/600x400/1e293b/ffffff.png"
                         data-ai-hint="text to image"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
-                        imageUrl="https://placehold.co/600x400.png"
+                        imageUrl="https://placehold.co/600x400/4a044e/ffffff.png"
                         data-ai-hint="intelligent editing"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
-                        imageUrl="https://placehold.co/600x400.png"
+                        imageUrl="https://placehold.co/600x400/064e3b/ffffff.png"
                         data-ai-hint="drawing tools"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
-                        imageUrl="https://placehold.co/600x400.png"
+                        imageUrl="https://placehold.co/600x400/312e81/ffffff.png"
                         data-ai-hint="ai eraser"
                    />
                 </CardContent>
