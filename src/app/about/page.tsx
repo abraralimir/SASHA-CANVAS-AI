@@ -6,7 +6,6 @@ import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon, Lightbulb } from 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataAiHint }: { icon: React.ReactNode, title: string, description: string, imageUrl: string, 'data-ai-hint': string }) => (
     <Card className="overflow-visible bg-transparent border-none shadow-none text-center">
@@ -32,24 +31,14 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  let headerImageUrl = "https://placehold.co/1920x1080/0f172a/93c5fd.png";
-  let showcaseImageUrl = "https://placehold.co/1280x720/0f172a/93c5fd.png";
-
-  const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
+  const headerImageUrl = "/images/about/header.png";
+  const showcaseImageUrl = "/images/about/showcase.png";
+  const textToImageUrl = "/images/about/feature-text-to-image.png";
+  const intelligentEditingUrl = "/images/about/feature-intelligent-editing.png";
+  const drawingToolkitUrl = "/images/about/feature-drawing-toolkit.png";
+  const aiEraserUrl = "/images/about/feature-ai-eraser.png";
   
-  try {
-    const headerImageResult = await generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
-    headerImageUrl = headerImageResult.image;
-  } catch (error) {
-    console.error("Failed to generate header image, using fallback.", error);
-  }
-
-  try {
-    const showcaseImageResult = await generateImageFromText({ prompt: showcaseImagePrompt });
-    showcaseImageUrl = showcaseImageResult.image;
-  } catch (error) {
-    console.error("Failed to generate showcase image, using fallback.", error);
-  }
+  const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
 
   return (
     <div className="relative h-full w-full">
@@ -129,28 +118,28 @@ export default async function AboutPage() {
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
                         description="Start with a blank canvas and a simple text prompt. Sasha will generate a high-quality image based on your description."
-                        imageUrl="https://placehold.co/600x400/1e293b/93c5fd.png"
+                        imageUrl={textToImageUrl}
                         data-ai-hint="text to image"
                    />
                    <FeatureCard
                         icon={<Wand2 className="h-6 w-6" />}
                         title="Intelligent Editing & Enhancement"
                         description="Use natural language to request edits—change colors, add elements, or alter the style of any image on the canvas."
-                        imageUrl="https://placehold.co/600x400/4a044e/f472b6.png"
+                        imageUrl={intelligentEditingUrl}
                         data-ai-hint="intelligent editing"
                    />
                    <FeatureCard
                         icon={<Paintbrush className="h-6 w-6" />}
                         title="Full-Featured Drawing Toolkit"
                         description="Take full manual control with a classic set of drawing tools like brushes, shapes, an eraser, and a color picker."
-                        imageUrl="https://placehold.co/600x400/064e3b/6ee7b7.png"
+                        imageUrl={drawingToolkitUrl}
                         data-ai-hint="drawing tools"
                    />
                    <FeatureCard
                         icon={<Sparkles className="h-6 w-6" />}
                         title="AI-Powered Eraser"
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
-                        imageUrl="https://placehold.co/600x400/312e81/a5b4fc.png"
+                        imageUrl={aiEraserUrl}
                         data-ai-hint="ai eraser"
                    />
                 </CardContent>
