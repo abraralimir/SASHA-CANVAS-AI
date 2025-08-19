@@ -6,6 +6,7 @@ import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon, Lightbulb } from 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 
 const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataAiHint }: { icon: React.ReactNode, title: string, description: string, imageUrl: string, 'data-ai-hint': string }) => (
     <div className="flex flex-col items-center text-center gap-4 p-1">
@@ -29,8 +30,16 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImageUrl = "https://placehold.co/1920x1080.png";
-  const showcaseImageUrl = "https://placehold.co/1280x720.png";
+  const headerImagePromise = generateImageFromText({ prompt: "A beautiful, abstract digital painting of a neural network with glowing nodes and connections, evoking a sense of creativity and intelligence. The style should be futuristic and artistic, with a dark background and vibrant colors like blue, purple, and pink." });
+  const showcaseImagePromise = generateImageFromText({ prompt: "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere." });
+
+  const [headerImageResult, showcaseImageResult] = await Promise.all([
+    headerImagePromise,
+    showcaseImagePromise
+  ]);
+  
+  const headerImageUrl = headerImageResult.image;
+  const showcaseImageUrl = showcaseImageResult.image;
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
   
   return (
