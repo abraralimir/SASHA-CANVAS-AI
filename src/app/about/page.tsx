@@ -1,7 +1,7 @@
 'use server';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon } from 'lucide-react';
+import { Bot, Paintbrush, Sparkles, Wand2, Image as ImageIcon, Lightbulb } from 'lucide-react';
 import { generateImageFromText } from '@/ai/flows/generate-image-from-text';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -20,11 +20,14 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
 );
 
 export default async function AboutPage() {
-  // Generate a unique, artistic image for the header on each page load.
-  const { image: headerImageUrl } = await generateImageFromText({
-    prompt: 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.',
-  });
+  const headerImagePrompt = 'An awe-inspiring, vibrant, and abstract digital painting that represents the concept of creative artificial intelligence. Use a mix of swirling cosmic nebulae and intricate geometric patterns. The color palette should be rich with deep purples, electric blues, and gold highlights, evoking a sense of wonder and possibility.';
+  const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
 
+  const [{ image: headerImageUrl }, { image: showcaseImageUrl }] = await Promise.all([
+    generateImageFromText({ prompt: headerImagePrompt }),
+    generateImageFromText({ prompt: showcaseImagePrompt })
+  ]);
+  
   return (
     <div className="relative h-full w-full">
       <div className="fixed inset-0 -z-10">
@@ -68,6 +71,29 @@ export default async function AboutPage() {
                     </Button>
                 </CardFooter>
             </Card>
+            
+            <Card className="bg-transparent border-none shadow-none">
+                <CardHeader>
+                    <CardTitle>Inspiration Showcase</CardTitle>
+                    <CardDescription>See what's possible with a single prompt.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="relative w-full aspect-video overflow-hidden rounded-lg shadow-2xl border border-primary/20">
+                        <Image
+                            src={showcaseImageUrl}
+                            alt="AI-generated showcase painting"
+                            fill
+                            objectFit="cover"
+                            data-ai-hint="fantasy landscape"
+                        />
+                    </div>
+                    <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                        <h4 className="font-semibold text-lg flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary"/> Prompt:</h4>
+                        <p className="text-muted-foreground italic mt-2">"{showcaseImagePrompt}"</p>
+                    </div>
+                </CardContent>
+            </Card>
+
 
              <Card className="bg-transparent border-none shadow-none">
                 <CardHeader>
