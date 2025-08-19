@@ -26,20 +26,21 @@ export default async function AboutPage() {
   });
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
+    <div className="relative h-full w-full">
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src={headerImageUrl}
+          alt="AI-generated artwork representing creativity"
+          layout="fill"
+          objectFit="cover"
+          data-ai-hint="abstract painting"
+        />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+      </div>
+      <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
         <div className="max-w-4xl mx-auto space-y-8">
-            <Card className="overflow-hidden shadow-xl">
-                <div className="relative h-64 w-full">
-                    <Image
-                        src={headerImageUrl}
-                        alt="AI-generated artwork representing creativity"
-                        layout="fill"
-                        objectFit="cover"
-                        data-ai-hint="abstract painting"
-                    />
-                     <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-                </div>
-                <CardHeader className="relative -mt-20 z-10 p-8">
+            <Card className="overflow-hidden shadow-xl bg-card/80">
+                <CardHeader className="p-8">
                     <div className="flex items-center gap-4">
                        <div className="p-3 rounded-full bg-primary/20 border-4 border-background shadow-lg">
                            <Bot className="w-10 h-10 text-primary" />
@@ -68,7 +69,7 @@ export default async function AboutPage() {
                 </CardFooter>
             </Card>
 
-             <Card>
+             <Card className="bg-card/80">
                 <CardHeader>
                     <CardTitle>Core Features</CardTitle>
                     <CardDescription>Explore what you can do with Sasha</CardDescription>
@@ -98,6 +99,7 @@ export default async function AboutPage() {
             </Card>
 
         </div>
+      </div>
     </div>
   );
 }
