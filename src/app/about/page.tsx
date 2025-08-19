@@ -39,7 +39,7 @@ export default async function AboutPage() {
       </div>
       <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
         <div className="max-w-4xl mx-auto space-y-8">
-            <Card className="overflow-hidden shadow-xl bg-card/80 border-primary/20">
+            <Card className="overflow-hidden bg-transparent border-none shadow-none">
                 <CardHeader className="p-8">
                     <div className="flex items-center gap-4">
                        <div className="p-3 rounded-full bg-primary/20 border-4 border-background shadow-lg">
@@ -59,7 +59,7 @@ export default async function AboutPage() {
                         Whether you're a professional artist, a hobbyist, or just curious about AI, Sasha provides an intuitive canvas to transform your words into stunning visuals.
                     </p>
                 </CardContent>
-                <CardFooter className="bg-muted/30 px-8 py-4">
+                <CardFooter className="bg-transparent px-8 py-4">
                     <Button asChild size="lg" className="w-full md:w-auto shadow-lg" variant="primary">
                         <Link href="/canvas">
                             Try Sasha Now
@@ -69,7 +69,7 @@ export default async function AboutPage() {
                 </CardFooter>
             </Card>
 
-             <Card className="bg-card/80 border-primary/20">
+             <Card className="bg-transparent border-none shadow-none">
                 <CardHeader>
                     <CardTitle>Core Features</CardTitle>
                     <CardDescription>Explore what you can do with Sasha</CardDescription>
