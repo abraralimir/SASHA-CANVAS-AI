@@ -55,27 +55,32 @@ export function useDrawing({
     const mainCtx = getCanvasContext(canvas);
     if (!mainCtx) return;
     
+    // Save the current drawing
     const drawing = mainCtx.getImageData(0, 0, canvas.width, canvas.height);
     
+    // Resize the canvases to fit the parent container
     const { width, height } = canvas.parentElement.getBoundingClientRect();
+    canvas.width = width;
+    canvas.height = height;
+    selectionCanvas.width = width;
+    selectionCanvas.height = height;
     
+    // Restore the drawing
+    mainCtx.putImageData(drawing, 0, 0);
+
+  }, [canvasRef, selectionCanvasRef, getCanvasContext]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const selectionCanvas = selectionCanvasRef.current;
+    if (!canvas || !canvas.parentElement || !selectionCanvas) return;
+    
+    const { width, height } = canvas.parentElement.getBoundingClientRect();
     canvas.width = width;
     canvas.height = height;
     selectionCanvas.width = width;
     selectionCanvas.height = height;
 
-    mainCtx.putImageData(drawing, 0, 0);
-    setCanvasBackground();
-
-  }, [canvasRef, selectionCanvasRef, getCanvasContext, setCanvasBackground]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !canvas.parentElement) return;
-    
-    const { width, height } = canvas.parentElement.getBoundingClientRect();
-    canvas.width = width;
-    canvas.height = height;
 
     setCanvasBackground();
 
@@ -83,11 +88,21 @@ export function useDrawing({
     return () => {
         window.removeEventListener('resize', resizeCanvases);
     };
-  }, [setCanvasBackground, resizeCanvases, canvasRef]);
+  }, [setCanvasBackground, resizeCanvases, canvasRef, selectionCanvasRef]);
   
   useEffect(() => {
-    setCanvasBackground();
-  }, [canvasColor, setCanvasBackground]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = getCanvasContext(canvas);
+    if (!ctx) return;
+
+    const currentContent = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = canvasColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.putImageData(currentContent, 0, 0);
+
+  }, [canvasColor, canvasRef, getCanvasContext]);
 
 
   const getPoint = (e: MouseEvent | Touch | React.MouseEvent<HTMLCanvasElement>): Point => {
