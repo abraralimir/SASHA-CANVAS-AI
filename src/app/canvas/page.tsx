@@ -544,6 +544,7 @@ export default function CanvasPage() {
         isProcessing={isProcessing}
         isDrawing={isDrawing}
         onStopDrawing={stopDrawing}
+        isMobile={isMobile}
       />
       <main className="relative flex flex-1 overflow-hidden">
         <div className="flex-1 relative h-full flex items-center justify-center p-4">

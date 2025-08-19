@@ -15,6 +15,7 @@ import {
   Loader,
   Square,
   Wand2,
+  Paintbrush,
 } from 'lucide-react';
 import type { DrawingTool } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -51,13 +52,13 @@ interface ToolbarProps {
   isProcessing: boolean;
   isDrawing: boolean;
   onStopDrawing: () => void;
+  isMobile: boolean;
 }
 
 const mainTools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
   { name: 'brush', icon: Brush, label: 'Brush' },
   { name: 'eraser', icon: Eraser, label: 'Eraser' },
   { name: 'pipette', icon: Pipette, label: 'Color Picker' },
-  { name: 'ai-eraser', icon: Sparkles, label: 'AI Eraser' },
 ];
 
 const shapeTools: { name: DrawingTool; icon: React.ElementType; label: string }[] = [
@@ -89,7 +90,8 @@ export default function Toolbar({
   onAutocomplete,
   isProcessing,
   isDrawing,
-  onStopDrawing
+  onStopDrawing,
+  isMobile
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -103,165 +105,280 @@ export default function Toolbar({
     }
   };
 
+  const renderDesktopToolbar = () => (
+     <div className="container mx-auto flex h-16 flex-wrap items-center justify-center md:justify-between gap-2 px-4">
+        {/* Main Tools */}
+        <div className="flex items-center gap-1">
+          {mainTools.map((t) => (
+            <Tooltip key={t.name}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={tool === t.name ? 'primary' : 'ghost'}
+                  size="icon"
+                  onClick={() => setTool(t.name)}
+                  style={tool === t.name ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
+                >
+                  <t.icon className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+           <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={shapeTools.some(t => t.name === tool) ? 'primary' : 'ghost'} size="icon"
+               style={shapeTools.some(t => t.name === tool) ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
+              >
+                  <Square className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-1">
+               <div className="flex items-center gap-1">
+                  {shapeTools.map((t) => (
+                    <Tooltip key={t.name}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={tool === t.name ? 'primary' : 'ghost'}
+                          size="icon"
+                          onClick={() => setTool(t.name)}
+                          style={tool === t.name ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
+                        >
+                          <t.icon className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t.label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+               </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        
+        <Separator orientation="vertical" className="h-8 hidden md:block" />
+
+        {/* Stroke & Canvas Controls */}
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-32 md:w-40 justify-between">
+                <span>Stroke</span>
+                <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: strokeColor }} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Color</label>
+                <div className="relative">
+                  <Input type="color" value={strokeColor} onChange={(e) => setStrokeColor(e.target.value)} className="h-10 w-full p-1" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Width ({strokeWidth}px)</label>
+                <Slider
+                  value={[strokeWidth]}
+                  onValueChange={(v) => setStrokeWidth(v[0])}
+                  min={1}
+                  max={50}
+                  step={1}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-32 md:w-40 justify-between">
+                <span>Canvas</span>
+                <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: canvasColor }} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Background Color</label>
+                <Input
+                  type="color"
+                  value={canvasColor}
+                  onChange={(e) => setCanvasColor(e.target.value)}
+                  className="h-10 w-full p-1"
+                />
+              </div>
+              {Object.entries(colorPalettes).map(([name, colors]) => (
+                <div key={name} className="space-y-2">
+                   <p className="text-sm font-medium">{name} Palette</p>
+                  <div className="grid grid-cols-7 gap-2">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        className="h-7 w-7 rounded-full border transition-transform hover:scale-110"
+                        style={{ backgroundColor: color }}
+                        onClick={() => setCanvasColor(color)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
+
+        </div>
+        
+        <Separator orientation="vertical" className="h-8 hidden md:block" />
+        
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => setTool('ai-eraser')} className={cn(tool === 'ai-eraser' && 'text-primary')}><Sparkles className="h-5 w-5" /></Button></TooltipTrigger>
+            <TooltipContent><p>AI Eraser</p></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onAutocomplete} disabled={isProcessing}>{isProcessing && tool==='autocomplete' ? <Loader className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />}</Button></TooltipTrigger>
+            <TooltipContent><p>Autocomplete Drawing</p></TooltipContent>
+          </Tooltip>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+          <Tooltip>
+            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={handleUploadClick}><Upload className="h-5 w-5" /></Button></TooltipTrigger>
+            <TooltipContent><p>Upload Image</p></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onDownload} disabled={isProcessing}>{isProcessing && tool==='download' ? <Loader className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}</Button></TooltipTrigger>
+            <TooltipContent><p>Enhance & Download</p></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onClear}><Trash2 className="h-5 w-5" /></Button></TooltipTrigger>
+            <TooltipContent><p>Clear Canvas</p></TooltipContent>
+          </Tooltip>
+           {isDrawing && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="destructive" size="icon" onClick={onStopDrawing}>
+                  <Square className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Stop Drawing</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </div>
+  );
+
+  const renderMobileToolbar = () => (
+    <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-2">
+      <div className="flex items-center gap-1">
+        <Popover>
+          <PopoverTrigger asChild>
+             <Button variant="ghost" size="icon">
+                <Paintbrush className="h-5 w-5" />
+             </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2">
+             <div className="flex flex-col gap-4">
+                {/* Manual Tools */}
+                <div className="flex items-center gap-1">
+                  {mainTools.map((t) => (
+                    <Button
+                      key={t.name}
+                      variant={tool === t.name ? 'primary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setTool(t.name)}
+                    >
+                      <t.icon className="h-5 w-5" />
+                    </Button>
+                  ))}
+                  {shapeTools.map((t) => (
+                    <Button
+                      key={t.name}
+                      variant={tool === t.name ? 'primary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setTool(t.name)}
+                    >
+                      <t.icon className="h-5 w-5" />
+                    </Button>
+                  ))}
+                </div>
+                 {/* Stroke & Canvas Controls */}
+                 <Separator />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Stroke Color</label>
+                    <Input type="color" value={strokeColor} onChange={(e) => setStrokeColor(e.target.value)} className="h-10 w-full p-1" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Stroke Width ({strokeWidth}px)</label>
+                    <Slider value={[strokeWidth]} onValueChange={(v) => setStrokeWidth(v[0])} min={1} max={50} step={1} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Canvas Color</label>
+                    <Input type="color" value={canvasColor} onChange={(e) => setCanvasColor(e.target.value)} className="h-10 w-full p-1" />
+                  </div>
+                </div>
+             </div>
+          </PopoverContent>
+        </Popover>
+         <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTool('eraser')}
+            className={cn(tool === 'eraser' && 'text-primary')}
+         >
+            <Eraser className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* AI and Main Actions */}
+      <div className="flex items-center gap-1">
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTool('ai-eraser')}
+            className={cn(tool === 'ai-eraser' && 'text-primary')}
+         >
+            <Sparkles className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onAutocomplete} disabled={isProcessing}>
+            {isProcessing && tool === 'autocomplete' ? <Loader className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />}
+        </Button>
+        {isDrawing ? (
+            <Button variant="destructive" size="icon" onClick={onStopDrawing}>
+              <Square className="h-5 w-5" />
+            </Button>
+        ) : (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon">...</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-1">
+                <div className="flex flex-col gap-1">
+                    <Button variant="ghost" onClick={handleUploadClick} className="justify-start gap-2 px-2">
+                        <Upload className="h-5 w-5" />
+                        <span>Upload</span>
+                    </Button>
+                    <Button variant="ghost" onClick={onDownload} disabled={isProcessing} className="justify-start gap-2 px-2">
+                        <Download className="h-5 w-5" />
+                        <span>Enhance & Download</span>
+                    </Button>
+                    <Button variant="ghost" onClick={onClear} className="justify-start gap-2 px-2">
+                        <Trash2 className="h-5 w-5" />
+                        <span>Clear</span>
+                    </Button>
+                </div>
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+    </div>
+  );
+
   return (
     <TooltipProvider delayDuration={100}>
       <header className="relative z-10 w-full shrink-0 border-b bg-card/80 backdrop-blur-lg">
-        <div className="container mx-auto flex h-16 flex-wrap items-center justify-center md:justify-between gap-2 px-4">
-          
-          {/* Main Tools */}
-          <div className="flex items-center gap-1">
-            {mainTools.map((t) => (
-              <Tooltip key={t.name}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={tool === t.name ? 'primary' : 'ghost'}
-                    size="icon"
-                    onClick={() => setTool(t.name)}
-                    style={tool === t.name ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
-                  >
-                    <t.icon className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-             <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={shapeTools.some(t => t.name === tool) ? 'primary' : 'ghost'} size="icon"
-                 style={shapeTools.some(t => t.name === tool) ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
-                >
-                    <Square className="h-5 w-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-1">
-                 <div className="flex items-center gap-1">
-                    {shapeTools.map((t) => (
-                      <Tooltip key={t.name}>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={tool === t.name ? 'primary' : 'ghost'}
-                            size="icon"
-                            onClick={() => setTool(t.name)}
-                            style={tool === t.name ? {backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'} : {}}
-                          >
-                            <t.icon className="h-5 w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t.label}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-
-          {/* Stroke & Canvas Controls */}
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-32 md:w-40 justify-between">
-                  <span>Stroke</span>
-                  <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: strokeColor }} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Color</label>
-                  <div className="relative">
-                    <Input type="color" value={strokeColor} onChange={(e) => setStrokeColor(e.target.value)} className="h-10 w-full p-1" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Width ({strokeWidth}px)</label>
-                  <Slider
-                    value={[strokeWidth]}
-                    onValueChange={(v) => setStrokeWidth(v[0])}
-                    min={1}
-                    max={50}
-                    step={1}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-32 md:w-40 justify-between">
-                  <span>Canvas</span>
-                  <div className="h-5 w-5 rounded-full border" style={{ backgroundColor: canvasColor }} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Background Color</label>
-                  <Input
-                    type="color"
-                    value={canvasColor}
-                    onChange={(e) => setCanvasColor(e.target.value)}
-                    className="h-10 w-full p-1"
-                  />
-                </div>
-                {Object.entries(colorPalettes).map(([name, colors]) => (
-                  <div key={name} className="space-y-2">
-                     <p className="text-sm font-medium">{name} Palette</p>
-                    <div className="grid grid-cols-7 gap-2">
-                      {colors.map((color) => (
-                        <button
-                          key={color}
-                          className="h-7 w-7 rounded-full border transition-transform hover:scale-110"
-                          style={{ backgroundColor: color }}
-                          onClick={() => setCanvasColor(color)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </PopoverContent>
-            </Popover>
-
-          </div>
-          
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-          
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onAutocomplete} disabled={isProcessing}>{isProcessing && tool==='autocomplete' ? <Loader className="h-5 w-5 animate-spin" /> : <Wand2 className="h-5 w-5" />}</Button></TooltipTrigger>
-              <TooltipContent><p>Autocomplete Drawing</p></TooltipContent>
-            </Tooltip>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={handleUploadClick}><Upload className="h-5 w-5" /></Button></TooltipTrigger>
-              <TooltipContent><p>Upload Image</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onDownload} disabled={isProcessing}>{isProcessing && tool==='download' ? <Loader className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}</Button></TooltipTrigger>
-              <TooltipContent><p>Enhance & Download</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={onClear}><Trash2 className="h-5 w-5" /></Button></TooltipTrigger>
-              <TooltipContent><p>Clear Canvas</p></TooltipContent>
-            </Tooltip>
-             {isDrawing && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="destructive" size="icon" onClick={onStopDrawing}>
-                    <Square className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Stop Drawing</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
+        {isMobile ? renderMobileToolbar() : renderDesktopToolbar()}
       </header>
     </TooltipProvider>
   );
