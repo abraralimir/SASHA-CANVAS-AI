@@ -18,10 +18,10 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
           className="object-cover"
         />
       </div>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary -mt-8 bg-background border-4 border-background">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background text-primary -mt-8 border-4 border-background">
         {icon}
       </div>
-      <div>
+      <div className="mt-[-8px]">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
