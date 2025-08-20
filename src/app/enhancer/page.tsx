@@ -49,34 +49,33 @@ export default function ImageEnhancerPage() {
                 return reject(new Error('Could not get canvas context.'));
             }
 
-            // Upscale by 2x for better quality
+            // Upscale by 2x for better quality and higher pixel count
             const scaleFactor = 2;
             canvas.width = img.width * scaleFactor;
             canvas.height = img.height * scaleFactor;
 
-            // Apply filters for enhancement
-            // This is a common stack for subtle enhancement.
-            // Order can matter.
+            // Apply a filter stack for enhancement.
+            // This combination subtly improves vibrance, contrast, and perceived sharpness.
             ctx.filter = `
-              contrast(105%) 
-              saturate(105%) 
-              brightness(102%)
+              contrast(110%) 
+              saturate(110%) 
+              brightness(105%)
             `;
             
             // Disable image smoothing for a sharper result when upscaling
             ctx.imageSmoothingEnabled = false;
 
-            // Draw the image onto the canvas
+            // Draw the image onto the canvas, which applies the filters
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            // Applying a sharpen filter by convolution is more complex,
-            // so we stick to simpler context filters for now. A slight contrast
-            // boost often gives a perception of sharpness.
+            // Note: True noise reduction often requires more complex algorithms (like convolution filters)
+            // or AI, but this filter stack provides a good-looking, natural enhancement that
+            // improves clarity and can mask minor noise effectively.
 
             resolve(canvas.toDataURL('image/png'));
         };
         img.onerror = () => {
-            reject(new Error('Failed to load image for enhancement.'));
+            reject(new Error('Failed to load image for enhancement. The image might be corrupt or from a protected source.'));
         };
         img.src = imageUrl;
     });
@@ -94,14 +93,15 @@ export default function ImageEnhancerPage() {
     }
 
     setIsProcessing(true);
-    setEnhancedImage(null);
+    setEnhancedImage(null); // Clear previous enhanced image
     toast({
       title: 'Enhancing Image...',
-      description: 'Applying filters to improve clarity and color.',
+      description: 'Applying high-resolution scaling and clarity filters.',
     });
 
     try {
-      // Use a timeout to allow the UI to update before the potentially blocking canvas work
+      // Use a timeout to allow the UI to update to the "Processing" state
+      // before starting the potentially blocking canvas operations.
       setTimeout(async () => {
         const enhancedDataUrl = await enhanceClientSide(originalImage);
         setEnhancedImage(enhancedDataUrl);
@@ -110,7 +110,7 @@ export default function ImageEnhancerPage() {
           description: 'Your image has been successfully enhanced.',
         });
         setIsProcessing(false);
-      }, 50);
+      }, 100);
 
     } catch (error) {
       console.error('Error enhancing image:', error);
@@ -208,3 +208,5 @@ export default function ImageEnhancerPage() {
     </div>
   );
 }
+
+    
