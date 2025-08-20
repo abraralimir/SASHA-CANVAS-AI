@@ -5,10 +5,9 @@ import { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Sparkles, Download, Wand2 } from 'lucide-react';
+import { Upload, Sparkles, Download, Wand2, Loader } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { enhanceSketchWithAI } from '@/ai/flows/enhance-sketch-with-ai';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ImageEnhancerPage() {
@@ -39,6 +38,51 @@ export default function ImageEnhancerPage() {
     }
   };
 
+  const enhanceClientSide = useCallback((imageUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject(new Error('Could not get canvas context.'));
+            }
+
+            // Upscale by 2x for better quality
+            const scaleFactor = 2;
+            canvas.width = img.width * scaleFactor;
+            canvas.height = img.height * scaleFactor;
+
+            // Apply filters for enhancement
+            // This is a common stack for subtle enhancement.
+            // Order can matter.
+            ctx.filter = `
+              contrast(105%) 
+              saturate(105%) 
+              brightness(102%)
+            `;
+            
+            // Disable image smoothing for a sharper result when upscaling
+            ctx.imageSmoothingEnabled = false;
+
+            // Draw the image onto the canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Applying a sharpen filter by convolution is more complex,
+            // so we stick to simpler context filters for now. A slight contrast
+            // boost often gives a perception of sharpness.
+
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => {
+            reject(new Error('Failed to load image for enhancement.'));
+        };
+        img.src = imageUrl;
+    });
+  }, []);
+
+
   const handleEnhance = async () => {
     if (!originalImage) {
       toast({
@@ -53,27 +97,28 @@ export default function ImageEnhancerPage() {
     setEnhancedImage(null);
     toast({
       title: 'Enhancing Image...',
-      description: 'Sasha is working its magic. Please wait.',
+      description: 'Applying filters to improve clarity and color.',
     });
 
     try {
-      const result = await enhanceSketchWithAI({
-        sketchDataUri: originalImage,
-        prompt: 'Enhance this image. Improve its quality, clarity, color, and lighting in a photorealistic style. Make it look like a high-resolution photograph.',
-      });
-      setEnhancedImage(result.enhancedImageDataUri);
-      toast({
-        title: 'Enhancement Complete!',
-        description: 'Your image has been successfully enhanced.',
-      });
+      // Use a timeout to allow the UI to update before the potentially blocking canvas work
+      setTimeout(async () => {
+        const enhancedDataUrl = await enhanceClientSide(originalImage);
+        setEnhancedImage(enhancedDataUrl);
+        toast({
+          title: 'Enhancement Complete!',
+          description: 'Your image has been successfully enhanced.',
+        });
+        setIsProcessing(false);
+      }, 50);
+
     } catch (error) {
       console.error('Error enhancing image:', error);
       toast({
         variant: 'destructive',
         title: 'Enhancement Failed',
-        description: 'Sorry, I was unable to enhance the image this time.',
+        description: error instanceof Error ? error.message : 'An unknown error occurred.',
       });
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -82,7 +127,7 @@ export default function ImageEnhancerPage() {
     if (!enhancedImage) return;
     const link = document.createElement('a');
     link.href = enhancedImage;
-    link.download = 'sasha-ai-enhanced-image.png';
+    link.download = 'sasha-enhanced-image.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -96,9 +141,9 @@ export default function ImageEnhancerPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border-2 border-primary/30 shadow-lg">
                 <Wand2 className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-bold tracking-tight">AI Image Enhancer</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">Image Enhancer</CardTitle>
             <CardDescription className="text-lg text-muted-foreground">
-              Upload an image and let Sasha AI improve its quality, clarity, and color automatically.
+              Upload an image to improve its quality, clarity, and color automatically, without AI.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -115,7 +160,7 @@ export default function ImageEnhancerPage() {
                         </div>
                     )}
                  </div>
-                 <Button onClick={handleUploadClick} variant="outline" className="w-full">
+                 <Button onClick={handleUploadClick} variant="outline" className="w-full" disabled={isProcessing}>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Image
                  </Button>
@@ -147,7 +192,7 @@ export default function ImageEnhancerPage() {
             <Button onClick={handleEnhance} disabled={!originalImage || isProcessing} size="lg" className="w-full shadow-lg">
               {isProcessing ? (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader className="w-5 h-5 mr-2 animate-spin" />
                   Enhancing...
                 </>
               ) : (
