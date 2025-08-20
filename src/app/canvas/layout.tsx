@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Sidebar,
@@ -11,7 +12,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { LogoIcon } from '@/components/icons';
-import { Paintbrush, Info, Bot } from 'lucide-react';
+import { Paintbrush, Info, Bot, Wand2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -45,6 +46,17 @@ export default function CanvasLayout({
                 >
                   <Paintbrush />
                   <span>Canvas</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem asChild>
+              <Link href="/enhancer">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith('/enhancer')}
+                  tooltip={{ children: 'Image Enhancer' }}
+                >
+                  <Wand2 />
+                  <span>Enhancer</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

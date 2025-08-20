@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataAiHint }: { icon: React.ReactNode, title: string, description: string, imageUrl: string, 'data-ai-hint': string }) => (
-    <Card className="overflow-visible bg-transparent border-none shadow-none text-center">
-      <CardHeader className="p-0 mb-8">
+    <Card className="overflow-visible bg-transparent border-none shadow-none text-center flex flex-col">
+      <CardHeader className="p-0 mb-8 flex-shrink-0">
         <div className="relative w-full h-48">
            <Image
               src={imageUrl}
@@ -20,7 +20,7 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
            />
         </div>
       </CardHeader>
-      <CardContent className="relative p-4 flex flex-col items-center gap-2">
+      <CardContent className="relative p-4 flex flex-col items-center gap-2 flex-grow">
          <div className="absolute -top-16 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-background text-primary border-4 border-background shadow-md">
             {icon}
          </div>
@@ -31,12 +31,13 @@ const FeatureCard = ({ icon, title, description, imageUrl, 'data-ai-hint': dataA
 );
 
 export default async function AboutPage() {
-  const headerImageUrl = "/header.jpg";
-  const showcaseImageUrl = "/showcase.jpg";
-  const textToImageUrl = "/feature-text-to-image.jpg";
-  const intelligentEditingUrl = "/feature-intelligent-editing.jpg";
-  const drawingToolkitUrl = "/feature-drawing-toolkit.png";
-  const aiEraserUrl = "/feature-ai-eraser.png";
+  const headerImageUrl = "/images/about/header.jpg";
+  const showcaseImageUrl = "/images/about/showcase.png";
+  const textToImageUrl = "/images/about/feature-text-to-image.png";
+  const intelligentEditingUrl = "/images/about/feature-intelligent-editing.png";
+  const drawingToolkitUrl = "/images/about/feature-drawing-toolkit.png";
+  const aiEraserUrl = "/images/about/feature-ai-eraser.png";
+  const imageEnhancerUrl = "https://placehold.co/600x400/1e293b/93c5fd.png";
   
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
 
@@ -54,7 +55,7 @@ export default async function AboutPage() {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       </div>
       <div className="h-full overflow-y-auto p-4 md:p-8 animate-fade-in-up">
-        <div className="max-w-4xl mx-auto space-y-12">
+        <div className="max-w-5xl mx-auto space-y-12">
             <Card className="overflow-hidden bg-transparent border-none shadow-none text-center">
                 <CardHeader className="p-8">
                     <div className="flex flex-col items-center gap-4">
@@ -75,11 +76,17 @@ export default async function AboutPage() {
                         Whether you're a professional artist, a hobbyist, or just curious about AI, Sasha provides an intuitive canvas to transform your words into stunning visuals.
                     </p>
                 </CardContent>
-                <CardFooter className="bg-transparent px-8 py-4 flex justify-center">
-                    <Button asChild size="lg" className="w-full md:w-auto shadow-lg" variant="primary">
+                <CardFooter className="bg-transparent px-8 py-4 flex flex-col sm:flex-row justify-center gap-4">
+                    <Button asChild size="lg" className="w-full sm:w-auto shadow-lg" variant="primary">
                         <Link href="/canvas">
                             Try Sasha Now
                             <Sparkles className="ml-2 h-5 w-5"/>
+                        </Link>
+                    </Button>
+                    <Button asChild size="lg" className="w-full sm:w-auto shadow-lg" variant="secondary">
+                        <Link href="/enhancer">
+                            Try Image Enhancer
+                            <Wand2 className="ml-2 h-5 w-5"/>
                         </Link>
                     </Button>
                 </CardFooter>
@@ -113,7 +120,7 @@ export default async function AboutPage() {
                     <CardTitle>Core Features</CardTitle>
                     <CardDescription>Explore what you can do with Sasha</CardDescription>
                 </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-x-8 gap-y-16 pt-8">
+                <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 pt-8">
                    <FeatureCard
                         icon={<ImageIcon className="h-6 w-6" />}
                         title="Text-to-Image Generation"
@@ -141,6 +148,13 @@ export default async function AboutPage() {
                         description="Seamlessly remove objects or imperfections from your images. The AI will intelligently fill in the background."
                         imageUrl={aiEraserUrl}
                         data-ai-hint="ai eraser"
+                   />
+                    <FeatureCard
+                        icon={<Sparkles className="h-6 w-6" />}
+                        title="AI Image Enhancer"
+                        description="Upload any image and let our AI improve its quality, clarity, color, and lighting automatically."
+                        imageUrl={imageEnhancerUrl}
+                        data-ai-hint="ai enhancer"
                    />
                 </CardContent>
             </Card>
