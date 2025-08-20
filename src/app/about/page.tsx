@@ -37,7 +37,7 @@ export default async function AboutPage() {
   const intelligentEditingUrl = "/images/about/feature-intelligent-editing.png";
   const drawingToolkitUrl = "/images/about/feature-drawing-toolkit.png";
   const aiEraserUrl = "/images/about/feature-ai-eraser.png";
-  const imageEnhancerUrl = "https://placehold.co/600x400/1e293b/93c5fd.png";
+  const imageEnhancerUrl = "/images/about/feature-ai-enhancer.png";
   
   const showcaseImagePrompt = "A breathtaking, hyper-detailed oil painting of a whimsical, bioluminescent forest at twilight. A crystal-clear river flows through the center, reflecting the glowing flora and a sky filled with two moons. The style should be reminiscent of Thomas Kinkade and Hayao Miyazaki, combining magical realism with a cozy, inviting atmosphere.";
 
