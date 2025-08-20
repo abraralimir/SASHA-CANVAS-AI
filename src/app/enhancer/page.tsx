@@ -45,33 +45,78 @@ export default function ImageEnhancerPage() {
         img.crossOrigin = 'anonymous';
         img.onload = () => {
             const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             if (!ctx) {
                 return reject(new Error('Could not get canvas context.'));
             }
 
-            // Upscale by 2x for better quality and higher pixel count
+            // 1. High-Resolution Upscaling
             const scaleFactor = 2;
             canvas.width = img.width * scaleFactor;
             canvas.height = img.height * scaleFactor;
 
-            // Apply a filter stack for enhancement.
-            // This combination subtly improves vibrance, contrast, and perceived sharpness.
-            ctx.filter = `
-              contrast(110%) 
-              saturate(110%) 
-              brightness(105%)
-            `;
-            
-            // Disable image smoothing for a sharper result when upscaling
-            ctx.imageSmoothingEnabled = false;
-
-            // Draw the image onto the canvas, which applies the filters
+            // Draw the upscaled image
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // Get pixel data for manipulation
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // 2. Advanced Contrast & Saturation Adjustment
+            const contrast = 1.2; // 20% more contrast
+            const saturation = 1.1; // 10% more saturation
+            const contrastFactor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Adjust contrast
+                data[i] = contrastFactor * (data[i] - 128) + 128;
+                data[i + 1] = contrastFactor * (data[i + 1] - 128) + 128;
+                data[i + 2] = contrastFactor * (data[i + 2] - 128) + 128;
+
+                // Adjust saturation
+                const r = data[i], g = data[i+1], b = data[i+2];
+                const gray = 0.299 * r + 0.587 * g + 0.114 * b; // Luminance
+                data[i] = -gray * (saturation - 1) + r * saturation;
+                data[i+1] = -gray * (saturation - 1) + g * saturation;
+                data[i+2] = -gray * (saturation - 1) + b * saturation;
+            }
+            ctx.putImageData(imageData, 0, 0);
             
-            // Note: True noise reduction often requires more complex algorithms (like convolution filters)
-            // or AI, but this filter stack provides a good-looking, natural enhancement that
-            // improves clarity and can mask minor noise effectively.
+            // 3. High-End Sharpening (Unsharp Mask)
+            // This is a simplified version. A true unsharp mask is more complex.
+            // We apply a sharpening convolution kernel for a crisp result.
+            const weights = [ 0, -1, 0, -1, 5, -1, 0, -1, 0 ];
+            const side = Math.round(Math.sqrt(weights.length));
+            const halfSide = Math.floor(side / 2);
+            
+            const src = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const dstData = ctx.createImageData(canvas.width, canvas.height);
+            const dst = dstData.data;
+
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const sy = y;
+                    const sx = x;
+                    const dstOff = (y * canvas.width + x) * 4;
+                    let r = 0, g = 0, b = 0;
+                    for (let cy = 0; cy < side; cy++) {
+                        for (let cx = 0; cx < side; cx++) {
+                            const scy = Math.min(canvas.height - 1, Math.max(0, sy + cy - halfSide));
+                            const scx = Math.min(canvas.width - 1, Math.max(0, sx + cx - halfSide));
+                            const srcOff = (scy * canvas.width + scx) * 4;
+                            const wt = weights[cy * side + cx];
+                            r += src.data[srcOff] * wt;
+                            g += src.data[srcOff + 1] * wt;
+                            b += src.data[srcOff + 2] * wt;
+                        }
+                    }
+                    dst[dstOff] = r;
+                    dst[dstOff + 1] = g;
+                    dst[dstOff + 2] = b;
+                    dst[dstOff + 3] = src.data[dstOff + 3];
+                }
+            }
+            ctx.putImageData(dstData, 0, 0);
 
             resolve(canvas.toDataURL('image/png'));
         };
@@ -250,3 +295,5 @@ export default function ImageEnhancerPage() {
     </div>
   );
 }
+
+    
